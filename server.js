@@ -45,7 +45,6 @@ function loadData() {
         db = { ...db, ...parsedData };
         // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা
         if (!db.config) db.config = {};
-        // ডিফল্ট পাসওয়ার্ড বা সিকিউরিটি যেন না হারায়
         if (!db.config.adminPassword) db.config.adminPassword = "admin";
         if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
         if (!db.config.securityAnswer) db.config.securityAnswer = "blue";
@@ -120,14 +119,20 @@ app.post('/api/validate-candidate', (req, res) => {
     }
   }
 
-  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক
+  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক (যদি রোলের পাশে অনুমোদিত কোড তালিকায় কোডটি থাকে, তবে বারবার পরীক্ষা দিতে পারবে - অ্যাডমিনের অনুমতি লাগবে না)
   const recordKey = `${examCode}_${candidateId}`;
   const isCompleted = db.completedRolls && db.completedRolls[recordKey];
 
   if (isCompleted) {
-    const session = db.activeSessions[candidateId];
-    if (!session) {
-      return res.json({ success: false, message: "এই রোল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে। পুনরায় অংশগ্রহণের জন্য অ্যাডমিনের অনুমতি প্রয়োজন।" });
+    // যদি অনুমোদিত কোড লিস্টে কোডটি থাকে, তবে অটোমেটিক পুরনো কমপ্লিটেড স্ট্যাটাস মুছে নতুন করে পরীক্ষা দেওয়ার সুযোগ দেওয়া হবে
+    if (allowedCodes.includes(examCode)) {
+      delete db.completedRolls[recordKey];
+      saveData();
+    } else {
+      const session = db.activeSessions[candidateId];
+      if (!session) {
+        return res.json({ success: false, message: "এই রোল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে। পুনরায় অংশগ্রহণের জন্য অ্যাডমিনের অনুমতি প্রয়োজন।" });
+      }
     }
   }
 
@@ -246,14 +251,12 @@ app.get('/api/admin/full-config', (req, res) => {
   });
 });
 
-// পাসওয়ার্ড ও অন্যান্য সেটিংস আপডেট রাউট (নিরাপদ ও স্থায়ী সেভ সহ)
 app.post('/api/admin/update-config', (req, res) => {
   const { 
     examCode, engPassage, bnPassage, duration, engMinPassWpm, bnMinPassWpm, 
     currPass, newPass, secQ, currSecAns, newSecAns, rollUpdates, newRolls 
   } = req.body;
 
-  // শুধুমাত্র বর্তমান পাসওয়ার্ড ফিল্ড দিয়ে থাকলে এবং তা ভুল হলে চেক করবে
   if (currPass && currPass.trim() !== "" && currPass !== db.config.adminPassword) {
     return res.json({ success: false, message: "বর্তমান পাসওয়ার্ড ভুল!" });
   }
@@ -302,9 +305,7 @@ app.post('/api/admin/update-config', (req, res) => {
   if (secQ && secQ.trim() !== "") db.config.securityQuestion = secQ.trim();
   if (newSecAns && newSecAns.trim() !== "") db.config.securityAnswer = newSecAns.trim();
 
-  // তাৎক্ষণিকভাবে ফাইল সিস্টেমে পার্মানেন্ট সেভ করা নিশ্চিত করা
   saveData();
-  
   res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে স্থায়ীভাবে আপডেট হয়েছে!" });
 });
 
