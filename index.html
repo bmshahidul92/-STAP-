@@ -35,17 +35,6 @@
       .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 18px; }
       .form-group input { width: 100%; padding: 10px; font-size: 18px; border: 1px solid #ccc; border-radius: 5px; }
       .instruction-list { font-size: 18px; line-height: 1.8; margin-bottom: 20px; color: #334155; }
-
-      .certificate-box { border: 5px double #1e3a8a; padding: 30px; text-align: center; background: #fff; margin-bottom: 20px; border-radius: 10px; }
-      .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-      .result-table th, .result-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; font-size: 16px; }
-      .result-table th { background: #f8fafc; color: #1e3a8a; }
-
-      @media print {
-        body { background: white; }
-        .no-print { display: none !important; }
-        .card { box-shadow: none; border: none; }
-      }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -81,11 +70,11 @@
             <div class="instruction-list">
                 <ul>
                     <li>পরীক্ষাটি দুটি ধাপে অনুষ্ঠিত হবে: প্রথমে <strong>ইংরেজি টাইপিং</strong> এবং পরে <strong>বাংলা টাইপিং</strong>।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই পেজ স্বয়ংক্রিয়ভাবে পরবর্তী ধাপে বা সাবমিট হয়ে যাবে (Auto-submit)।</li>
+                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই পেজ স্বয়ংক্রিয়ভাবে পরবর্তী ধাপে বা সাবমিট হয়ে যাবে (Auto-submit)।</li>
                     <li>কোনো ধরনের <strong>Copy, Paste বা Cut</strong> করার সুযোগ নেই।</li>
-                    <li>ভুল টাইপিংয়ের ক্ষেত্রে ব্রাউজারের কোনো লাল দাগ (Spellcheck) প্রদর্শন করবে না।</li>
+                    <li>ভুল টাইপিংয়ের ক্ষেত্রে ব্রাউজারের কোনো লাল দাগ (Spellcheck) প্রদর্শন করবে না।</li>
                     <li><strong>৫% এর বেশি ভুল</strong> হলে বা নির্দিষ্ট ডব্লিউপিএম (WPM) না থাকলে ফেল হিসেবে গণ্য হবে।</li>
-                    <li>অনুমতি ছাড়া ব্রাউজার ট্যাব পরিবর্তন করা নিষেধ।</li>
+                    <li>অনুমতি ছাড়া ব্রাউজার ট্যাব পরিবর্তন করা নিষেধ।</li>
                 </ul>
             </div>
             <button onclick="startEnglishStep()" class="btn-action" style="background:#16a34a;">ইংরেজি টাইপ শুরু করুন</button>
@@ -95,76 +84,32 @@
         <div id="eng-card" class="card hidden">
             <div class="exam-header">
                 <div><strong>পরীক্ষার্থী:</strong> <span id="eng-disp-name"></span> (রোল: <span id="eng-disp-id" class="font-eng"></span>)</div>
-                <div><strong>ইংরেজি সময় বাকি:</strong> <span id="eng-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
+                <div><strong>ইংরেজি সময় বাকি:</strong> <span id="eng-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
             </div>
             <div id="eng-passage" class="passage-box font-eng"></div>
             <textarea id="eng-typing-area" class="typing-area font-eng" spellcheck="false" autocomplete="off" placeholder="Type here..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
-            <button onclick="finishEnglishStep()" class="btn-action" style="background:#ea580c;">ইংরেজি টাইপ শেষ ও বাংলায় প্রবেশ</button>
+            <button onclick="finishEnglishStep()" class="btn-action" style="background:#ea580c;">ইংরেজি টাইপ শেষ ও বাংলায় প্রবেশ</button>
         </div>
 
         <!-- ৪. বাংলা টাইপিং স্ক্রিন -->
         <div id="bn-card" class="card hidden">
             <div class="exam-header">
                 <div><strong>পরীক্ষার্থী:</strong> <span id="bn-disp-name"></span> (রোল: <span id="bn-disp-id" class="font-eng"></span>)</div>
-                <div><strong>বাংলা সময় বাকি:</strong> <span id="bn-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
+                <div><strong>বাংলা সময় বাকি:</strong> <span id="bn-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
             </div>
             <div id="bn-passage" class="passage-box font-bn"></div>
             <textarea id="bn-typing-area" class="typing-area font-bn" spellcheck="false" autocomplete="off" placeholder="এখানে টাইপ করুন..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
             <button onclick="submitFinalExam()" class="btn-action" style="background:#16a34a;">চূড়ান্ত জমা দিন</button>
         </div>
 
-        <!-- ৫. সাকসেস ও মার্কশিট স্ক্রিন -->
-        <div id="success-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
-            <div class="certificate-box">
-                <h2 class="brand-title">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
-                <div class="brand-subtitle">Official Typing Test Marksheet & Certificate</div>
-                <hr style="margin: 15px 0;">
-                <p style="font-size: 18px; text-align: left; margin: 10px 0;"><strong>পরীক্ষার্থীর নাম:</strong> <span id="res-name"></span></p>
-                <p style="font-size: 18px; text-align: left; margin: 10px 0;"><strong>রোল নম্বর:</strong> <span id="res-id" class="font-eng"></span></p>
-                <p style="font-size: 18px; text-align: left; margin: 10px 0;"><strong>পরীক্ষার কোড:</strong> <span id="res-code" class="font-eng"></span></p>
-                <p style="font-size: 18px; text-align: left; margin: 10px 0;"><strong>জমা দেওয়ার সময়:</strong> <span id="res-time"></span></p>
-
-                <table class="result-table">
-                    <thead>
-                        <tr>
-                            <th>পরীক্ষার ধরণ</th>
-                            <th>মোট শব্দ</th>
-                            <th>সঠিক</th>
-                            <th>ভুল</th>
-                            <th>সঠিকতা (%)</th>
-                            <th>নেট WPM</th>
-                            <th>ফলাফল</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>ইংরেজি (English)</strong></td>
-                            <td id="res-eng-words">0</td>
-                            <td id="res-eng-correct">0</td>
-                            <td id="res-eng-errors">0</td>
-                            <td id="res-eng-acc">0%</td>
-                            <td id="res-eng-wpm">0</td>
-                            <td><span id="res-eng-pass" style="font-weight: bold;">-</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>বাংলা (Bangla)</strong></td>
-                            <td id="res-bn-words">0</td>
-                            <td id="res-bn-correct">0</td>
-                            <td id="res-bn-errors">0</td>
-                            <td id="res-bn-acc">0%</td>
-                            <td id="res-bn-wpm">0</td>
-                            <td><span id="res-bn-pass" style="font-weight: bold;">-</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div style="margin-top: 25px; font-size: 20px; font-weight: bold;">
-                    চূড়ান্ত স্ট্যাটাস: <span id="res-overall-status" style="padding: 5px 15px; border-radius: 5px;"></span>
-                </div>
-            </div>
-
-            <div class="no-print" style="display: flex; gap: 10px;">
-                <button onclick="window.print()" class="btn-action" style="background: #2563eb; margin-top: 0;">মার্কশিট ও সার্টিফিকেট প্রিন্ট / PDF</button>
+        <!-- ৫. ধন্যবাদ ও সফলভাবে জমা হওয়ার স্ক্রিন (মার্কশিট লুকানো) -->
+        <div id="success-card" class="card hidden" style="max-width: 600px; margin: 80px auto; text-align: center; padding: 40px;">
+            <h2 class="brand-title" style="color: #16a34a; margin-bottom: 15px;">পরীক্ষা সফলভাবে সম্পন্ন হয়েছে!</h2>
+            <p style="font-size: 20px; color: #334155; line-height: 1.6; margin-bottom: 25px;">
+                ধন্যবাদ! আপনার উত্তরপত্র সফলভাবে জমা দেওয়া হয়েছে। আপনি এখন এই ব্রাউজার ট্যাব বা উইন্ডোটি বন্ধ করতে পারেন।
+            </p>
+            <div style="font-size: 16px; color: #64748b;">
+                রোল নম্বর: <span id="submitted-roll" class="font-eng" style="font-weight: bold;"></span>
             </div>
         </div>
     </div>
@@ -270,7 +215,7 @@
             const res = await fetch('/api/submit-exam', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ candidateId, candidateName, engText: document.getElementById('eng-typing-area').value, bnText: document.getElementById('bn-typing-area').value })
+              body: JSON.stringify({ candidateId, candidateName, examCode, engText: document.getElementById('eng-typing-area').value, bnText: document.getElementById('bn-typing-area').value })
             });
             const data = await res.json();
 
@@ -278,33 +223,13 @@
               document.getElementById('eng-card').classList.add('hidden');
               document.getElementById('bn-card').classList.add('hidden');
               document.getElementById('success-card').classList.remove('hidden');
-              
-              const r = data.result;
-              document.getElementById('res-name').innerText = r.candidateName;
-              document.getElementById('res-id').innerText = r.candidateId;
-              document.getElementById('res-code').innerText = examCode; // পরীক্ষার কোড আপডেট
-              document.getElementById('res-time').innerText = r.submittedAt;
-              document.getElementById('res-eng-words').innerText = r.english.totalWords;
-              document.getElementById('res-eng-correct').innerText = r.english.correctWords;
-              document.getElementById('res-eng-errors').innerText = r.english.errors;
-              document.getElementById('res-eng-acc').innerText = r.english.accuracy + "%";
-              document.getElementById('res-eng-wpm').innerText = r.english.netWpm;
-              document.getElementById('res-eng-pass').innerText = r.english.passed ? "পাস (Pass)" : "ফেল (Fail)";
-              document.getElementById('res-eng-pass').style.color = r.english.passed ? "#16a34a" : "#dc2626";
-              
-              document.getElementById('res-bn-words').innerText = r.bangla.totalWords;
-              document.getElementById('res-bn-correct').innerText = r.bangla.correctWords;
-              document.getElementById('res-bn-errors').innerText = r.bangla.errors;
-              document.getElementById('res-bn-acc').innerText = r.bangla.accuracy + "%";
-              document.getElementById('res-bn-wpm').innerText = r.bangla.netWpm;
-              document.getElementById('res-bn-pass').innerText = r.bangla.passed ? "পাস (Pass)" : "ফেল (Fail)";
-              document.getElementById('res-bn-pass').style.color = r.bangla.passed ? "#16a34a" : "#dc2626";
-
-              document.getElementById('res-overall-status').innerText = r.overallPassed ? "কৃতকার্য (PASSED)" : "অকৃতকার্য (FAILED)";
-              document.getElementById('res-overall-status').style.background = r.overallPassed ? "#dcfce7" : "#fee2e2";
-              document.getElementById('res-overall-status').style.color = r.overallPassed ? "#166534" : "#991b1b";
+              document.getElementById('submitted-roll').innerText = candidateId;
+            } else {
+              alert(data.message || "সাবমিট করতে সমস্যা হয়েছে।");
             }
-          } catch (err) { alert("সার্ভার ত্রুটি!"); }
+          } catch (err) { 
+            alert("সার্ভার ত্রুটি!"); 
+          }
         }
     </script>
 </body>
