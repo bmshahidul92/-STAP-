@@ -35,25 +35,40 @@ let db = {
   activeSessions: {}
 };
 
+// পার্মানেন্ট ডাটা লোড করার নিরাপদ ফাংশন
 function loadData() {
-  if (fs.existsSync(DATA_FILE)) {
-    try { 
-      const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      db = { ...db, ...data };
-    } catch (e) {
-      console.error("Data load error:", e);
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const fileData = fs.readFileSync(DATA_FILE, 'utf8');
+      if (fileData.trim() !== '') {
+        const parsedData = JSON.parse(fileData);
+        db = { ...db, ...parsedData };
+        // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা
+        if (!db.config) db.config = {};
+        if (!db.rollSettings) db.rollSettings = {};
+        if (!db.completedRolls) db.completedRolls = {};
+        if (!db.results) db.results = [];
+        if (!db.activeSessions) db.activeSessions = {};
+      }
+    } else {
+      // ফাইল না থাকলে ডিফল্ট ডাটা দিয়ে ফাইল তৈরি করে নেওয়া
+      saveData();
     }
+  } catch (e) {
+    console.error("Data load error:", e);
   }
 }
 
+// পার্মানেন্ট ডাটা সেভ করার ফাংশন
 function saveData() {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (e) {
     console.error("Data save error:", e);
   }
 }
 
+// সার্ভার চালু হওয়ার শুরুতেই ডাটা লোড করা
 loadData();
 
 app.get('/', (req, res) => {
