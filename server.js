@@ -43,7 +43,8 @@ function loadData() {
       if (fileData.trim() !== '') {
         const parsedData = JSON.parse(fileData);
         db = { ...db, ...parsedData };
-        // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা
+        
+        // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা এবং সেভ করা পাসওয়ার্ড বা কনফিগ সুরক্ষিত রাখা
         if (!db.config) db.config = {};
         if (!db.config.adminPassword) db.config.adminPassword = "admin";
         if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
@@ -55,7 +56,7 @@ function loadData() {
         if (!db.activeSessions) db.activeSessions = {};
       }
     } else {
-      // ফাইল না থাকলে ডিফল্ট ডাটা দিয়ে ফাইল তৈরি করে নেওয়া
+      // ফাইল না থাকলে ডিফল্ট ডাটা দিয়ে ফাইল তৈরি করে নেওয়া
       saveData();
     }
   } catch (e) {
@@ -72,7 +73,7 @@ function saveData() {
   }
 }
 
-// সার্ভার চালু হওয়ার শুরুতেই ডাটা লোড করা
+// সার্ভার চালু হওয়ার শুরুতেই ডাটা লোড করা
 loadData();
 
 app.get('/', (req, res) => {
@@ -119,12 +120,11 @@ app.post('/api/validate-candidate', (req, res) => {
     }
   }
 
-  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক (যদি রোলের পাশে অনুমোদিত কোড তালিকায় কোডটি থাকে, তবে বারবার পরীক্ষা দিতে পারবে - অ্যাডমিনের অনুমতি লাগবে না)
+  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক
   const recordKey = `${examCode}_${candidateId}`;
   const isCompleted = db.completedRolls && db.completedRolls[recordKey];
 
   if (isCompleted) {
-    // যদি অনুমোদিত কোড লিস্টে কোডটি থাকে, তবে অটোমেটিক পুরনো কমপ্লিটেড স্ট্যাটাস মুছে নতুন করে পরীক্ষা দেওয়ার সুযোগ দেওয়া হবে
     if (allowedCodes.includes(examCode)) {
       delete db.completedRolls[recordKey];
       saveData();
@@ -165,7 +165,7 @@ app.post('/api/save-progress', (req, res) => {
   res.json({ success: true });
 });
 
-// নিখুঁত টাইপিং মেট্রিকস (WPM, Accuracy, Errors) ক্যালকুলেশন ফাংশন (আপডেটকৃত)
+// নিখুঁত টাইপিং মেট্রিকস (WPM, Accuracy, Errors) ক্যালকুলেশন ফাংশন
 function calculateMetrics(original, typed, durationMin, minPassWpm) {
   const cleanOriginal = (original || "").trim();
   const cleanTyped = (typed || "").trim();
@@ -189,7 +189,6 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
   let correctWords = 0;
   let errors = 0;
 
-  // শব্দের সঠিক উপস্থিতি মেলানোর লজিক (মাঝখান থেকে কোনো শব্দ বাদ পড়লেও পরের সঠিক শব্দগুলো ভুল দেখাবে না)
   const origWordSet = [...origWords];
   
   typedWords.forEach(word => {
@@ -202,14 +201,11 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
     }
   });
 
-  // অতিরিক্ত টাইপ করা শব্দগুলোকে ভুল হিসেবে গণনা করা
   if (typedWords.length > origWords.length) {
     errors += (typedWords.length - origWords.length);
   }
 
   const totalTypedCount = typedWords.length;
-  
-  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (স্পেস বাদে ৫ ক্যারেক্টারে ১ শব্দ)
   const totalCharsWithoutSpaces = cleanTyped.replace(/\s+/g, '').length;
   const standardWords = totalCharsWithoutSpaces / 5;
 
@@ -217,8 +213,6 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
   const errorPercent = totalTypedCount > 0 ? parseFloat(((errors / totalTypedCount) * 100).toFixed(1)) : 0;
   
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  
-  // নেট WPM হিসাব
   const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin) - (errors / durationMin))) : 0;
   
   const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
@@ -302,7 +296,6 @@ app.post('/api/admin/update-config', (req, res) => {
   if (engMinPassWpm) db.config.engMinPassWpm = parseInt(engMinPassWpm);
   if (bnMinPassWpm) db.config.bnMinPassWpm = parseInt(bnMinPassWpm);
 
-  // রোল আপডেট (ব্লক/আনব্লক, এক্সপায়ারি টাইম এবং অনুমোদিত পরীক্ষা কোড সহ)
   if (rollUpdates && Array.isArray(rollUpdates)) {
     rollUpdates.forEach(item => {
       const { roll, expiryTime, isBlocked, allowedExamCodes } = item;
@@ -321,7 +314,6 @@ app.post('/api/admin/update-config', (req, res) => {
     });
   }
 
-  // নতুন রোল যোগ করার টেক্সট প্রসেসিং
   if (newRolls && newRolls.trim() !== "") {
     const list = newRolls.split(/[\n,]+/).map(r => r.trim()).filter(r => r.length > 0);
     list.forEach(r => {
@@ -336,7 +328,7 @@ app.post('/api/admin/update-config', (req, res) => {
   if (newSecAns && newSecAns.trim() !== "") db.config.securityAnswer = newSecAns.trim();
 
   saveData();
-  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে স্থায়ীভাবে আপডেট হয়েছে!" });
+  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে স্থায়ীভাবে আপডেট হয়েছে!" });
 });
 
 app.post('/api/admin/delete-roll', (req, res) => {
@@ -391,7 +383,7 @@ app.post('/api/admin/recover-password', (req, res) => {
   }
 });
 
-// ফিল্টার সহ রেজাল্ট ফেচ করার রুট (যেমন: নির্দিষ্ট পরীক্ষা কোড বা রোল অনুযায়ী)
+// ফিল্টার সহ রেজাল্ট ফেচ করার রুট
 app.get('/api/results', (req, res) => {
   let filteredResults = db.results;
   const { examCodes, rolls } = req.query;
