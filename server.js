@@ -329,7 +329,7 @@ app.post('/api/admin/recover-password', (req, res) => {
   } else res.json({ success: false, message: "ভুল সিকিউরিটি উত্তর!" });
 });
 
-// ফিল্টার সহ রেজাল্ট ফেচ করার রুট (যেমন: নির্দিষ্ট পরীক্ষা কোড বা রোল অনুযায়ী)
+// ফিল্টার সহ রেজাল্ট ফেচ করার রুট (যেমন: নির্দিষ্ট পরীক্ষা কোড বা রোল অনুযায়ী)
 app.get('/api/results', (req, res) => {
   let filteredResults = db.results;
   const { examCodes, rolls } = req.query;
