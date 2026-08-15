@@ -32,7 +32,8 @@
     .btn-reset { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
     .btn-print { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 5px; font-size: 16px; }
     .btn-logout { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; font-size: 16px; }
-    .btn-view { background: #7c3aed; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-view { background: #7c3aed; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 3px; }
+    .btn-cert { background: #d97706; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 14px; }
@@ -48,15 +49,20 @@
     /* ফিল্টার সেকশন স্টাইল */
     .filter-bar { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
 
-    /* মোডাল ডিজাইন (টাইপ করা কপি দেখার জন্য) */
+    /* মোডাল ডিজাইন */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; width: 800px; max-width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
     .passage-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; font-size: 15px; }
 
+    /* প্রিন্ট লেআউট ও মার্কশিট/সার্টিফিকেট পেপার স্টাইল */
+    .print-sheet { display: none; }
+
     @media print {
+      body * { visibility: hidden; }
       .no-print { display: none !important; }
-      .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
-      body { background: white; }
+      .print-sheet, .print-sheet * { visibility: visible; }
+      .print-sheet { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+      @page { size: A4; margin: 15mm; }
     }
   </style>
 </head>
@@ -264,6 +270,7 @@
             <th colspan="8">বাংলা টাইপিং</th>
             <th rowspan="2">চূড়ান্ত ফল</th>
             <th rowspan="2" class="no-print">কপি দেখুন</th>
+            <th rowspan="2" class="no-print">মার্কশিট ও সার্টিফিকেট প্রিন্ট</th>
             <th rowspan="2" class="no-print">অ্যাকশন</th>
           </tr>
           <tr>
@@ -288,7 +295,7 @@
           </tr>
         </thead>
         <tbody id="results-body">
-          <tr><td colspan="22">ডাটা লোড হচ্ছে...</td></tr>
+          <tr><td colspan="23">ডাটা লোড হচ্ছে...</td></tr>
         </tbody>
       </table>
     </div>
@@ -311,6 +318,9 @@
       </div>
     </div>
   </div>
+
+  <!-- প্রিন্ট করার জন্য ডেডিকেটেড মার্কশিট ও সার্টিফিকেট পেপার (প্রিন্ট সময় ভিজিবল হবে) -->
+  <div id="print-sheet-container" class="print-sheet"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -374,7 +384,6 @@
       document.getElementById('cfg-bn-passage').value = data.bnPassage || '';
       document.getElementById('cfg-sec-q').value = data.securityQuestion || '';
 
-      // রোল সেটিংস টেবিল রেন্ডার
       const tbody = document.getElementById('roll-settings-body');
       tbody.innerHTML = '';
       const rollSettings = data.rollSettings || {};
@@ -489,7 +498,7 @@
       tbody.innerHTML = '';
 
       if (!globalResults || globalResults.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="22">কোনো ফলাফল পাওয়া যায়নি।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="23">কোনো ফলাফল পাওয়া যায়নি।</td></tr>';
         return;
       }
 
@@ -502,7 +511,7 @@
         tr.innerHTML = `
           <td class="english-num"><strong>${row.candidateId}</strong></td>
           <td>${row.candidateName}</td>
-          <td class="english-num">${row.examCode || '-'}</td>
+          <td class="english-num"><strong>${row.examCode || '-'}</strong></td>
           <td class="english-num">${row.submittedAt || '-'}</td>
           
           <!-- English Results -->
@@ -528,6 +537,10 @@
           <td>${overallStatus}</td>
           <td class="no-print">
             <button onclick="viewTypedCopy(${idx})" class="btn-view">কপি দেখুন</button>
+          </td>
+          <td class="no-print">
+            <button onclick="printMarkSheet(${idx})" class="btn-view" style="background:#0284c7;">মার্কশিট</button>
+            <button onclick="printCertificate(${idx})" class="btn-cert">সার্টিফিকেট</button>
           </td>
           <td class="no-print">
             <button onclick="deleteResult(${idx})" class="btn-delete">মুছুন</button>
@@ -573,7 +586,7 @@
     function viewTypedCopy(index) {
       const row = globalResults[index];
       if (!row) return;
-      document.getElementById('modal-candidate-title').innerText = `রোল: ${row.candidateId} (${row.candidateName}) - টাইপকৃত কপি`;
+      document.getElementById('modal-candidate-title').innerText = `রোল: ${row.candidateId} (${row.candidateName}) - পরীক্ষার কোড: ${row.examCode || '-'} - টাইপকৃত কপি`;
       document.getElementById('modal-eng-text').innerText = row.engText || 'কোনো টেক্সট পাওয়া যায়নি।';
       document.getElementById('modal-bn-text').innerText = row.bnText || 'কোনো টেক্সট পাওয়া যায়নি।';
       document.getElementById('typed-copy-modal').classList.remove('hidden');
@@ -584,6 +597,109 @@
     }
 
     function printTypedCopy() {
+      window.print();
+    }
+
+    // মার্কশিট প্রিন্ট জেনারেটর ফাংশন
+    function printMarkSheet(index) {
+      const row = globalResults[index];
+      if (!row) return;
+
+      const container = document.getElementById('print-sheet-container');
+      container.innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #1e3a8a; padding-bottom:10px; margin-bottom:20px;">
+          <h2 style="margin:0; color:#1e3a8a;">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+          <p style="margin:2px 0; font-weight:bold; font-size:16px;">অফিশিয়াল টাইপিং মূল্যায়ন মার্কশিট</p>
+          <p style="margin:0; font-size:14px;">পরীক্ষা কোড (Exam Code): <strong>${row.examCode || 'N/A'}</strong></p>
+        </div>
+        <table style="width:100%; margin-bottom:20px; font-size:15px;">
+          <tr>
+            <td style="text-align:left; border:none; padding:5px;"><strong>পরীক্ষার্থীর নাম:</strong> ${row.candidateName}</td>
+            <td style="text-align:right; border:none; padding:5px;"><strong>রোল নম্বর:</strong> ${row.candidateId}</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; border:none; padding:5px;"><strong>জমাদানের সময়:</strong> ${row.submittedAt || '-'}</td>
+            <td style="text-align:right; border:none; padding:5px;"><strong>চূড়ান্ত ফলাফল:</strong> ${row.overallPassed ? 'কৃতকার্য (PASSED)' : 'অকৃতকার্য (FAILED)'}</td>
+          </tr>
+        </table>
+        
+        <h3>১. ইংরেজি টাইপিং পারফরম্যান্স</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+          <tr><th>মোট শব্দ</th><th>সঠিক শব্দ</th><th>সঠিকতা (%)</th><th>ভুল শব্দ</th><th>ভুল (%)</th><th>নিট গতি (WPM)</th><th>স্ট্যাটাস</th></tr>
+          <tr>
+            <td class="english-num">${row.english.totalWords}</td>
+            <td class="english-num">${row.english.correctWords}</td>
+            <td class="english-num">${row.english.accuracy}%</td>
+            <td class="english-num">${row.english.errors}</td>
+            <td class="english-num">${row.english.errorPercent}%</td>
+            <td class="english-num"><strong>${row.english.netWpm}</strong></td>
+            <td>${row.english.passed ? 'পাস' : 'ফেল'}</td>
+          </tr>
+        </table>
+
+        <h3>২. বাংলা টাইপিং পারফরম্যান্স</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+          <tr><th>মোট শব্দ</th><th>সঠিক শব্দ</th><th>সঠিকতা (%)</th><th>ভুল শব্দ</th><th>ভুল (%)</th><th>নিট গতি (WPM)</th><th>স্ট্যাটাস</th></tr>
+          <tr>
+            <td class="english-num">${row.bangla.totalWords}</td>
+            <td class="english-num">${row.bangla.correctWords}</td>
+            <td class="english-num">${row.bangla.accuracy}%</td>
+            <td class="english-num">${row.bangla.errors}</td>
+            <td class="english-num">${row.bangla.errorPercent}%</td>
+            <td class="english-num"><strong>${row.bangla.netWpm}</strong></td>
+            <td>${row.bangla.passed ? 'পাস' : 'ফেল'}</td>
+          </tr>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; margin-top:60px; text-align:center;">
+          <div>
+            <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;">পরীক্ষার্থীর স্বাক্ষর</p>
+          </div>
+          <div>
+            <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;">পরীক্ষা নিয়ন্ত্রক / এডমিন</p>
+          </div>
+        </div>
+      `;
+
+      window.print();
+    }
+
+    // সার্টিফিকেট প্রিন্ট জেনারেটর ফাংশন
+    function printCertificate(index) {
+      const row = globalResults[index];
+      if (!row) return;
+
+      const container = document.getElementById('print-sheet-container');
+      container.innerHTML = `
+        <div style="border:10px solid #1e3a8a; padding:40px; text-align:center; height:90vh; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h1 style="color:#1e3a8a; margin:0; font-size:32px;">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h1>
+            <p style="margin:5px 0; font-size:18px; color:#475569;">Certificate of Achievement in Typing Proficiency</p>
+            <p style="margin:5px 0; font-size:14px; font-weight:bold;">পরীক্ষা কোড (Exam Code): ${row.examCode || 'N/A'}</p>
+          </div>
+          
+          <div style="margin:20px 0;">
+            <p style="font-size:18px; margin:10px 0;">প্রত্যয়ন করা যাচ্ছে যে,</p>
+            <h2 style="font-size:30px; color:#1e40af; margin:10px 0; border-bottom:2px dashed #93c5fd; display:inline-block; padding-bottom:5px;">${row.candidateName}</h2>
+            <p style="font-size:18px; margin:10px 0;">রোল নম্বর: <strong>${row.candidateId}</strong></p>
+            <p style="font-size:16px; line-height:1.6; margin-top:15px;">
+              তিনি এসটিএপি (STAP) পোর্টালে সফলভাবে কম্পিউটার টাইপিং দক্ষতা পরীক্ষায় অংশগ্রহণ করে 
+              <strong>${row.overallPassed ? 'কৃতকার্য' : 'অংশগ্রহণ'}</strong> হয়েছেন। 
+              তার ইংরেজি টাইপিং নিট গতি <strong>${row.english.netWpm} WPM</strong> এবং বাংলা টাইপিং নিট গতি <strong>${row.bangla.netWpm} WPM</strong>।
+            </p>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; margin-top:40px; text-align:center; padding:0 30px;">
+            <div>
+              <p class="english-num" style="margin:0;">তারিখ: ${row.submittedAt || '-'}</p>
+            </div>
+            <div>
+              <p style="border-top:1px solid #333; width:220px; margin:0 auto; padding-top:5px; font-weight:bold;">কর্তৃপক্ষের স্বাক্ষর</p>
+            </div>
+          </div>
+        </div>
+      `;
+
       window.print();
     }
 
@@ -601,7 +717,6 @@
       }
     }
 
-    // Socket.io রিয়েল-টাইম আপডেট হ্যান্ডলিং
     try {
       const socket = io();
       socket.on('exam_submitted', () => {
