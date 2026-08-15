@@ -28,8 +28,7 @@ let db = {
     securityQuestion: "আপনার প্রিয় রঙ কোনটি?",
     securityAnswer: "blue"
   },
-  // প্রতিটি রোলের জন্য নির্দিষ্ট এক্সপায়ারি সময় এবং ব্লক স্ট্যাটাস রাখার স্ট্রাকচার
-  // rollSettings format: { "101": { expiryTime: "2026-12-31T23:59", isBlocked: false } }
+  // rollSettings format: { "101": { expiryTime: "2026-12-31T23:59", isBlocked: false, allowedExamCodes: ["BCC2026"] } }
   rollSettings: {}, 
   completedRolls: {}, 
   results: [],
@@ -57,7 +56,6 @@ function saveData() {
 
 loadData();
 
-// রুট বা হোমপেজে সরাসরি index.html দেখানোর জন্য রাউট
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -71,14 +69,10 @@ app.get('/api/exam-config', (req, res) => {
   });
 });
 
-// পরীক্ষার্থী ভ্যালিডেশন: ব্লক চেক, মেয়াদ (Expiry Time) চেক এবং রোল চেক
+// পরীক্ষার্থী ভ্যালিডেশন: রোল, নির্দিষ্ট পরীক্ষা কোড, ব্লক ও মেয়াদ চেক
 app.post('/api/validate-candidate', (req, res) => {
   const { candidateId, examCode } = req.body;
   
-  if (examCode !== db.config.examCode) {
-    return res.json({ success: false, message: "ভুল পরীক্ষা কোড (Exam Code)!" });
-  }
-
   const rollInfo = db.rollSettings[candidateId];
 
   // ১. রোল রেজিস্টার্ড বা এন্ট্রি করা আছে কিনা চেক
@@ -86,28 +80,34 @@ app.post('/api/validate-candidate', (req, res) => {
     return res.json({ success: false, message: "এই রোল নম্বরটি সিস্টেমে নিবন্ধিত নয়।" });
   }
 
-  // ২. রোল ব্লক করা আছে কিনা চেক (অনুমোদনের বদলে ব্লক/আনব্লক লজিক)
-  if (rollInfo.isBlocked) {
-    return res.json({ success: false, message: "এই রোল নম্বরটি বর্তমানে ব্লক করা রয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+  // ২. নির্দিষ্ট রোলের জন্য উক্ত পরীক্ষা কোড অনুমোদিত কিনা চেক
+  const allowedCodes = rollInfo.allowedExamCodes || [db.config.examCode];
+  if (!allowedCodes.includes(examCode)) {
+    return res.json({ success: false, message: "এই রোল নম্বরের জন্য এই পরীক্ষা কোডটি অনুমোদিত নয়।" });
   }
 
-  // ৩. নির্দিষ্ট সময়সীমা বা মেয়াদ উত্তীর্ণ (Expiry Time) চেক
+  // ৩. রোল ব্লক করা আছে কিনা চেক
+  if (rollInfo.isBlocked) {
+    return res.json({ success: false, message: "এই রোল নম্বরটি বর্তমানে ব্লক করা রয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+  }
+
+  // ৪. নির্দিষ্ট সময়সীমা বা মেয়াদ উত্তীর্ণ (Expiry Time) চেক
   if (rollInfo.expiryTime) {
     const now = new Date();
     const expiry = new Date(rollInfo.expiryTime);
     if (now > expiry) {
-      return res.json({ success: false, message: "এই রোল নম্বরের পরীক্ষার সময়সীমা (Expiry Time) পার হয়ে গেছে।" });
+      return res.json({ success: false, message: "এই রোল নম্বরের পরীক্ষার সময়সীমা (Expiry Time) পার হয়ে গেছে।" });
     }
   }
 
-  // ৪. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক
+  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক
   const recordKey = `${examCode}_${candidateId}`;
   const isCompleted = db.completedRolls && db.completedRolls[recordKey];
 
   if (isCompleted) {
     const session = db.activeSessions[candidateId];
     if (!session) {
-      return res.json({ success: false, message: "এই রোল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে। পুনরায় অংশগ্রহণের জন্য অ্যাডমিনের অনুমতি প্রয়োজন।" });
+      return res.json({ success: false, message: "এই রোল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে। পুনরায় অংশগ্রহণের জন্য অ্যাডমিনের অনুমতি প্রয়োজন।" });
     }
   }
 
@@ -119,7 +119,6 @@ app.post('/api/validate-candidate', (req, res) => {
   });
 });
 
-// লাইভ টাইপিং প্রগ্রেস সেভ ও ব্রডকাস্ট করার জন্য Socket.io ইন্টিগ্রেশন
 app.post('/api/save-progress', (req, res) => {
   const { candidateId, candidateName, step, engText, bnText, engTimeLeft, bnTimeLeft, currentWpm, currentAccuracy } = req.body;
   
@@ -137,19 +136,14 @@ app.post('/api/save-progress', (req, res) => {
   };
   
   saveData();
-
-  // রিয়েল-টাইমে অ্যাডমিন প্যানেলে বা লিডারবোর্ডে পাঠানোর জন্য
   io.emit('live_progress_update', db.activeSessions[candidateId]);
-
   res.json({ success: true });
 });
 
-// নিখুঁত ক্যালকুলেশন লজিক (৫ স্ট্রোক = ১ শব্দ এবং যথাযথ ওয়ার্ড ম্যাচিং)
 function calculateMetrics(original, typed, durationMin, minPassWpm) {
   const cleanTyped = typed || "";
-  const totalChars = cleanTyped.length; // মোট স্ট্রোক বা ক্যারেক্টার
-  
-  const standardWords = totalChars / 5; // ৫ ক্যারেক্টারে ১ স্ট্যান্ডার্ড শব্দ
+  const totalChars = cleanTyped.length;
+  const standardWords = totalChars / 5;
 
   const origWords = original.trim().split(/\s+/);
   const typedWords = cleanTyped.trim().split(/\s+/).filter(w => w.length > 0);
@@ -169,7 +163,6 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
   const accuracy = totalTypedCount > 0 ? ((correctWords / totalTypedCount) * 100).toFixed(1) : 100;
   const errorPercent = totalTypedCount > 0 ? ((errors / totalTypedCount) * 100).toFixed(1) : 0;
   
-  // গ্রস এবং নেট ডব্লিউপিএম হিসাব
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
   const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin) - (errors / durationMin))) : 0;
   
@@ -187,9 +180,9 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
   };
 }
 
-// অটো-সাবমিট বা নরমাল সাবমিট রুট
 app.post('/api/submit-exam', (req, res) => {
-  const { candidateId, candidateName, engText, bnText } = req.body;
+  const { candidateId, candidateName, examCode, engText, bnText } = req.body;
+  const currentExamCode = examCode || db.config.examCode;
 
   const engRes = calculateMetrics(db.config.engPassage, engText || '', db.config.duration, db.config.engMinPassWpm);
   const bnRes = calculateMetrics(db.config.bnPassage, bnText || '', db.config.duration, db.config.bnMinPassWpm);
@@ -200,7 +193,7 @@ app.post('/api/submit-exam', (req, res) => {
   const finalResult = {
     candidateId,
     candidateName,
-    examCode: db.config.examCode,
+    examCode: currentExamCode,
     submittedAt: submissionTime,
     engText,
     bnText,
@@ -212,12 +205,11 @@ app.post('/api/submit-exam', (req, res) => {
   db.results.unshift(finalResult);
   
   if (!db.completedRolls) db.completedRolls = {};
-  db.completedRolls[`${db.config.examCode}_${candidateId}`] = true;
+  db.completedRolls[`${currentExamCode}_${candidateId}`] = true;
 
   delete db.activeSessions[candidateId];
   saveData();
 
-  // সাবমিট হওয়ার পর লাইভ ইভেন্ট পাঠানো
   io.emit('exam_submitted', finalResult);
   res.json({ success: true, result: finalResult });
 });
@@ -227,7 +219,6 @@ app.post('/api/admin/login', (req, res) => {
   else res.json({ success: false, message: "ভুল পাসওয়ার্ড!" });
 });
 
-// অ্যাডমিন প্যানেলের জন্য ফুল কনফিগ এবং রোল লিস্ট প্রদান
 app.get('/api/admin/full-config', (req, res) => {
   res.json({
     ...db.config,
@@ -235,11 +226,10 @@ app.get('/api/admin/full-config', (req, res) => {
   });
 });
 
-// অ্যাডমিন প্যানেল থেকে কনফিগ, রোল এক্সপায়ারি ও ব্লক/আনব্লক আপডেট
 app.post('/api/admin/update-config', (req, res) => {
   const { 
     examCode, engPassage, bnPassage, duration, engMinPassWpm, bnMinPassWpm, 
-    currPass, newPass, secQ, currSecAns, newSecAns, rollUpdates 
+    currPass, newPass, secQ, currSecAns, newSecAns, rollUpdates, newRolls 
   } = req.body;
 
   if (currPass && currPass !== db.config.adminPassword) {
@@ -256,26 +246,31 @@ app.post('/api/admin/update-config', (req, res) => {
   if (engMinPassWpm) db.config.engMinPassWpm = parseInt(engMinPassWpm);
   if (bnMinPassWpm) db.config.bnMinPassWpm = parseInt(bnMinPassWpm);
 
-  // রোল আপডেট (ব্লক/আনব্লক এবং এক্সপায়ারি টাইম সহ)
+  // রোল আপডেট (ব্লক/আনব্লক, এক্সপায়ারি টাইম এবং অনুমোদিত পরীক্ষা কোড সহ)
   if (rollUpdates && Array.isArray(rollUpdates)) {
     rollUpdates.forEach(item => {
-      const { roll, expiryTime, isBlocked } = item;
+      const { roll, expiryTime, isBlocked, allowedExamCodes } = item;
       if (roll) {
         if (!db.rollSettings[roll]) {
-          db.rollSettings[roll] = { expiryTime: "", isBlocked: false };
+          db.rollSettings[roll] = { expiryTime: "", isBlocked: false, allowedExamCodes: [db.config.examCode] };
         }
         if (expiryTime !== undefined) db.rollSettings[roll].expiryTime = expiryTime;
         if (isBlocked !== undefined) db.rollSettings[roll].isBlocked = isBlocked;
+        if (allowedExamCodes !== undefined) {
+          db.rollSettings[roll].allowedExamCodes = Array.isArray(allowedExamCodes) 
+            ? allowedExamCodes 
+            : allowedExamCodes.split(',').map(c => c.trim()).filter(c => c.length > 0);
+        }
       }
     });
   }
 
-  // নতুন রোল যোগ করার টেক্সট প্রসেসিং যদি আসে
-  if (req.body.newRolls) {
-    const list = req.body.newRolls.split(/[\n,]+/).map(r => r.trim()).filter(r => r.length > 0);
+  // নতুন রোল যোগ করার টেক্সট প্রসেসিং
+  if (newRolls) {
+    const list = newRolls.split(/[\n,]+/).map(r => r.trim()).filter(r => r.length > 0);
     list.forEach(r => {
       if (!db.rollSettings[r]) {
-        db.rollSettings[r] = { expiryTime: "", isBlocked: false };
+        db.rollSettings[r] = { expiryTime: "", isBlocked: false, allowedExamCodes: [db.config.examCode] };
       }
     });
   }
@@ -285,26 +280,25 @@ app.post('/api/admin/update-config', (req, res) => {
   if (newSecAns) db.config.securityAnswer = newSecAns;
 
   saveData();
-  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে আপডেট হয়েছে!" });
+  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে আপডেট হয়েছে!" });
 });
 
-// নির্দিষ্ট রোল ডিলিট বা রোল ডাটা ম্যানেজ করার রুট
 app.post('/api/admin/delete-roll', (req, res) => {
   const { roll } = req.body;
   if (db.rollSettings[roll]) {
     delete db.rollSettings[roll];
     saveData();
-    return res.json({ success: true, message: `রোল ${roll} মুছে ফেলা হয়েছে।` });
+    return res.json({ success: true, message: `রোল ${roll} মুছে ফেলা হয়েছে।` });
   }
-  res.json({ success: false, message: "রোলটি পাওয়া যায়নি।" });
+  res.json({ success: false, message: "রোলটি পাওয়া যায়নি।" });
 });
 
-// পুনরায় পরীক্ষা বা সেশন রিসেট করার রুট
 app.post('/api/admin/reset-session', (req, res) => {
-  const { candidateId } = req.body;
+  const { candidateId, examCode } = req.body;
   if(!candidateId) return res.json({ success: false, message: "রোল নম্বর দিন।" });
 
-  const recordKey = `${db.config.examCode}_${candidateId}`;
+  const targetExamCode = examCode || db.config.examCode;
+  const recordKey = `${targetExamCode}_${candidateId}`;
   let cleared = false;
 
   if (db.activeSessions[candidateId]) {
@@ -335,7 +329,23 @@ app.post('/api/admin/recover-password', (req, res) => {
   } else res.json({ success: false, message: "ভুল সিকিউরিটি উত্তর!" });
 });
 
-app.get('/api/results', (req, res) => res.json(db.results));
+// ফিল্টার সহ রেজাল্ট ফেচ করার রুট (যেমন: নির্দিষ্ট পরীক্ষা কোড বা রোল অনুযায়ী)
+app.get('/api/results', (req, res) => {
+  let filteredResults = db.results;
+  const { examCodes, rolls } = req.query;
+
+  if (examCodes) {
+    const codes = examCodes.split(',').map(c => c.trim()).filter(c => c.length > 0);
+    filteredResults = filteredResults.filter(r => codes.includes(r.examCode));
+  }
+
+  if (rolls) {
+    const rollList = rolls.split(',').map(r => r.trim()).filter(r => r.length > 0);
+    filteredResults = filteredResults.filter(r => rollList.includes(r.candidateId));
+  }
+
+  res.json(filteredResults);
+});
 
 app.delete('/api/results/:index', (req, res) => {
   const idx = parseInt(req.params.index);
@@ -353,7 +363,6 @@ app.delete('/api/results', (req, res) => {
   res.json({ success: true });
 });
 
-// লাইভ লিডারবোর্ডের জন্য সক্রিয় সেশন ডেটা দেখার এপিআই
 app.get('/api/admin/active-sessions', (req, res) => {
   res.json(db.activeSessions);
 });
