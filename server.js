@@ -46,7 +46,7 @@ function loadData() {
         
         // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা এবং সেভ করা পাসওয়ার্ড বা কনফিগ সুরক্ষিত রাখা
         if (!db.config) db.config = {};
-        if (!db.config.adminPassword) db.config.adminPassword = "632750";
+        db.config.adminPassword = "632750";
         if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
         if (!db.config.securityAnswer) db.config.securityAnswer = "blue";
         
