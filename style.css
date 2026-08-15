@@ -1,0 +1,147 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #eef2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    user-select: none;
+}
+
+.container {
+    width: 100%;
+    max-width: 680px;
+    padding: 20px;
+}
+
+.card {
+    background: #ffffff;
+    padding: 35px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.main-title {
+    text-align: center;
+    font-size: 26px;
+    color: #1a1a1a;
+    font-weight: 700;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-top: 5px;
+    margin-bottom: 30px;
+}
+
+.section-title {
+    font-size: 18px;
+    color: #222;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: #dbeafe; /* হালকা নীল ব্যাকগ্রাউন্ড (প্রথম ছবির মতো) */
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    font-size: 16px;
+    color: #1e3a8a;
+    font-weight: 500;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary {
+    width: 100%;
+    background-color: #1d4ed8;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #1e40af;
+}
+
+/* অন্যান্য সাধারণ ক্লাস */
+.hidden { display: none !important; }
+.text-danger { color: #dc2626; font-weight: bold; }
+
+.exam-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.passage-box {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    height: 150px;
+    overflow-y: auto;
+}
+
+#typing-area {
+    width: 100%;
+    height: 120px;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    resize: none;
+    margin-bottom: 15px;
+}
+
+.btn-submit {
+    width: 100%;
+    background-color: #16a34a;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.char-correct { color: #16a34a; font-weight: bold; }
+.char-incorrect { color: #dc2626; background-color: #fee2e2; font-weight: bold; }

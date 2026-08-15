@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</title>
+    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+    <style>
+      @font-face {
+          font-family: 'Nikosh';
+          src: local('Nikosh'), local('NikoshBAN'), url('https://fonts.cdnfonts.com/s/72895/Nikosh.woff') format('woff');
+          font-display: swap;
+      }
+      * { box-sizing: border-box; }
+      body, html { margin: 0; padding: 0; font-family: 'Nikosh', 'SolaimanLipi', 'Times New Roman', serif; background: #f1f5f9; }
+      .container { max-width: 95%; margin: 20px auto; }
+      .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+      .hidden { display: none !important; }
+      
+      .brand-title { color: #1e3a8a; text-align: center; margin: 0; font-size: 26px; font-weight: bold; font-family: 'Nikosh', serif; }
+      .brand-subtitle { color: #475569; text-align: center; margin: 4px 0 15px 0; font-size: 15px; font-weight: bold; font-family: 'Times New Roman', serif; }
+
+      .exam-header { display: flex; justify-content: space-between; align-items: center; background: #e2e8f0; padding: 15px 20px; border-radius: 8px; font-size: 20px; font-weight: bold; margin-bottom: 20px; }
+      
+      .passage-box { font-size: 22px; line-height: 1.8; background: #f8fafc; border: 2px solid #cbd5e1; padding: 20px; border-radius: 8px; height: 180px; overflow-y: auto; margin-bottom: 20px; text-align: justify; user-select: none; }
+      textarea.typing-area { width: 100%; height: 220px; font-size: 22px; line-height: 1.8; padding: 15px; border: 2px solid #94a3b8; border-radius: 8px; resize: none; outline: none; }
+      textarea.typing-area:focus { border-color: #2563eb; box-shadow: 0 0 8px rgba(37,99,235,0.3); }
+
+      .font-eng { font-family: 'Times New Roman', Times, serif !important; }
+      .font-bn { font-family: 'Nikosh', 'SolaimanLipi', serif !important; }
+
+      .btn-action { width: 100%; margin-top: 20px; padding: 15px; font-size: 20px; font-weight: bold; color: white; background: #2563eb; border: none; border-radius: 8px; cursor: pointer; }
+      .btn-action:hover { background: #1d4ed8; }
+      .form-group { margin-bottom: 15px; }
+      .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 18px; }
+      .form-group input { width: 100%; padding: 10px; font-size: 18px; border: 1px solid #ccc; border-radius: 5px; }
+      .instruction-list { font-size: 18px; line-height: 1.8; margin-bottom: 20px; color: #334155; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="container">
+        <!-- ১. টাইপিং পরীক্ষা লগইন -->
+        <div id="login-card" class="card" style="max-width: 500px; margin: 60px auto;">
+            <h2 class="brand-title">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+            <div class="brand-subtitle">Shahidul Typing Assessment Portal</div>
+            <hr><br>
+            <form onsubmit="event.preventDefault(); handleLogin();">
+                <div class="form-group">
+                    <label>রোল নম্বর:</label>
+                    <input type="text" id="candidate-id" class="font-eng" required placeholder="উদাহরণ: 1001">
+                </div>
+                <div class="form-group">
+                    <label>পরীক্ষার্থীর নাম:</label>
+                    <input type="text" id="candidate-name" class="font-bn" required placeholder="আপনার নাম লিখুন">
+                </div>
+                <div class="form-group">
+                    <label>পরীক্ষা কোড (Exam Code):</label>
+                    <input type="text" id="exam-code" class="font-eng" required placeholder="এডমিন কর্তৃক সরবরাহকৃত কোড">
+                </div>
+                <button type="submit" class="btn-action">প্রবেশ করুন</button>
+            </form>
+        </div>
+
+        <!-- ২. নির্দেশনা স্ক্রিন -->
+        <div id="instruction-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
+            <h2 class="brand-title">পরীক্ষার সাধারণ নির্দেশাবলী</h2>
+            <div class="brand-subtitle">General Instructions</div>
+            <hr><br>
+            <div class="instruction-list">
+                <ul>
+                    <li>পরীক্ষাটি দুটি ধাপে অনুষ্ঠিত হবে: প্রথমে <strong>ইংরেজি টাইপিং</strong> এবং পরে <strong>বাংলা টাইপিং</strong>।</li>
+                    <li>প্রতিটি পর্বের নির্দিষ্ট সময় গণনা করা হবে। নির্ধারিত সময়ের পর বাটন চেপে পরের ধাপে প্রবেশ করবেন।</li>
+                    <li>কোনো ধরনের <strong>Copy, Paste বা Cut</strong> করার সুযোগ নেই।</li>
+                    <li>ভুল টাইপিংয়ের ক্ষেত্রে ব্রাউজারের কোনো লাল দাগ (Spellcheck) প্রদর্শন করবে না।</li>
+                    <li><strong>৫% এর বেশি ভুল</strong> হলে পরীক্ষায় অকৃতকার্য (Fail) হিসেবে গণ্য করা হবে।</li>
+                    <li>অনুমতি ছাড়া ব্রাউজার ট্যাব পরিবর্তন করা নিষেধ।</li>
+                </ul>
+            </div>
+            <button onclick="startEnglishStep()" class="btn-action" style="background:#16a34a;">ইংরেজি টাইপ শুরু করুন</button>
+        </div>
+
+        <!-- ৩. ইংরেজি টাইপিং স্ক্রিন -->
+        <div id="eng-card" class="card hidden">
+            <div class="exam-header">
+                <div><strong>পরীক্ষার্থী:</strong> <span id="eng-disp-name"></span> (রোল: <span id="eng-disp-id" class="font-eng"></span>)</div>
+                <div><strong>ইংরেজি সময় বাকি:</strong> <span id="eng-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
+            </div>
+            <div id="eng-passage" class="passage-box font-eng"></div>
+            <textarea id="eng-typing-area" class="typing-area font-eng" spellcheck="false" autocomplete="off" placeholder="Type here..." oncopy="return false" onpaste="return false" oncut="return false"></textarea>
+            <button onclick="finishEnglishStep()" class="btn-action" style="background:#ea580c;">ইংরেজি টাইপ শেষ ও বাংলায় প্রবেশ</button>
+        </div>
+
+        <!-- ৪. বাংলা টাইপিং স্ক্রিন -->
+        <div id="bn-card" class="card hidden">
+            <div class="exam-header">
+                <div><strong>পরীক্ষার্থী:</strong> <span id="bn-disp-name"></span> (রোল: <span id="bn-disp-id" class="font-eng"></span>)</div>
+                <div><strong>বাংলা সময় বাকি:</strong> <span id="bn-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
+            </div>
+            <div id="bn-passage" class="passage-box font-bn"></div>
+            <textarea id="bn-typing-area" class="typing-area font-bn" spellcheck="false" autocomplete="off" placeholder="এখানে টাইপ করুন..." oncopy="return false" onpaste="return false" oncut="return false"></textarea>
+            <button onclick="submitFinalExam()" class="btn-action" style="background:#16a34a;">চূড়ান্ত জমা দিন</button>
+        </div>
+
+        <!-- ৫. সাকসেস স্ক্রিন -->
+        <div id="success-card" class="card hidden" style="text-align: center; padding: 50px 20px; max-width: 600px; margin: 80px auto;">
+            <div style="font-size: 60px; color: #16a34a; margin-bottom: 10px;">✅</div>
+            <h2 class="brand-title">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+            <div class="brand-subtitle">Shahidul Typing Assessment Portal</div>
+            <p style="font-size: 22px; color: #15803d; font-weight: bold; margin-top: 20px;">
+                আপনার ইংরেজি ও বাংলা উভয় টাইপিং সফলভাবে জমা হয়েছে।
+            </p>
+            <p style="color: #666; font-size: 16px; margin-top: 8px;">অংশগ্রহণের জন্য আপনাকে ধন্যবাদ।</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let candidateId = "";
+        let candidateName = "";
+        let examCode = "";
+        let configData = {};
+
+        let engTimerInterval = null;
+        let bnTimerInterval = null;
+        let engTimeLeft = 0;
+        let bnTimeLeft = 0;
+
+        async function handleLogin() {
+          candidateId = document.getElementById('candidate-id').value.trim();
+          candidateName = document.getElementById('candidate-name').value.trim();
+          examCode = document.getElementById('exam-code').value.trim();
+
+          if (!candidateId || !candidateName || !examCode) {
+            alert("দয়া করে সকল তথ্য পূরণ করুন।");
+            return;
+          }
+
+          try {
+            const res = await fetch('/api/validate-candidate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ candidateId, examCode })
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+              alert(data.message);
+              return;
+            }
+
+            const cfgRes = await fetch('/api/exam-config');
+            configData = await cfgRes.json();
+
+            document.getElementById('eng-passage').innerText = configData.engPassage || "";
+            document.getElementById('bn-passage').innerText = configData.bnPassage || "";
+
+            document.getElementById('eng-disp-name').innerText = candidateName;
+            document.getElementById('eng-disp-id').innerText = candidateId;
+            document.getElementById('bn-disp-name').innerText = candidateName;
+            document.getElementById('bn-disp-id').innerText = candidateId;
+
+            document.getElementById('login-card').classList.add('hidden');
+            document.getElementById('instruction-card').classList.remove('hidden');
+
+            if (data.hasSavedSession && data.sessionData) {
+              if (data.sessionData.engText) document.getElementById('eng-typing-area').value = data.sessionData.engText;
+              if (data.sessionData.bnText) document.getElementById('bn-typing-area').value = data.sessionData.bnText;
+            }
+
+          } catch (err) {
+            console.error(err);
+            alert("সার্ভার কানেকশনে সমস্যা হয়েছে!");
+          }
+        }
+
+        function startEnglishStep() {
+          document.getElementById('instruction-card').classList.add('hidden');
+          document.getElementById('eng-card').classList.remove('hidden');
+
+          // নিরাপদভাবে সংখ্যা রূপান্তর ও NaN রোধ
+          const durationMin = parseInt(configData.duration) || 2;
+          engTimeLeft = durationMin * 60;
+
+          updateEngTimerDisplay();
+          engTimerInterval = setInterval(() => {
+            engTimeLeft--;
+            if (engTimeLeft <= 0) {
+              clearInterval(engTimerInterval);
+              engTimeLeft = 0;
+              updateEngTimerDisplay();
+              finishEnglishStep();
+              return;
+            }
+            updateEngTimerDisplay();
+            saveProgressAuto();
+          }, 1000);
+        }
+
+        function updateEngTimerDisplay() {
+          let minutes = Math.floor(engTimeLeft / 60);
+          let seconds = engTimeLeft % 60;
+
+          const m = isNaN(minutes) ? "00" : (minutes < 10 ? "0" + minutes : minutes);
+          const s = isNaN(seconds) ? "00" : (seconds < 10 ? "0" + seconds : seconds);
+
+          document.getElementById('eng-timer').innerText = m + ":" + s;
+        }
+
+        function finishEnglishStep() {
+          if (engTimerInterval) clearInterval(engTimerInterval);
+          
+          document.getElementById('eng-card').classList.add('hidden');
+          document.getElementById('bn-card').classList.remove('hidden');
+
+          const durationMin = parseInt(configData.duration) || 2;
+          bnTimeLeft = durationMin * 60;
+
+          updateBnTimerDisplay();
+          bnTimerInterval = setInterval(() => {
+            bnTimeLeft--;
+            if (bnTimeLeft <= 0) {
+              clearInterval(bnTimerInterval);
+              bnTimeLeft = 0;
+              updateBnTimerDisplay();
+              submitFinalExam();
+              return;
+            }
+            updateBnTimerDisplay();
+            saveProgressAuto();
+          }, 1000);
+        }
+
+        function updateBnTimerDisplay() {
+          let minutes = Math.floor(bnTimeLeft / 60);
+          let seconds = bnTimeLeft % 60;
+
+          const m = isNaN(minutes) ? "00" : (minutes < 10 ? "0" + minutes : minutes);
+          const s = isNaN(seconds) ? "00" : (seconds < 10 ? "0" + seconds : seconds);
+
+          document.getElementById('bn-timer').innerText = m + ":" + s;
+        }
+
+        async function saveProgressAuto() {
+          const engText = document.getElementById('eng-typing-area').value;
+          const bnText = document.getElementById('bn-typing-area').value;
+          
+          try {
+            await fetch('/api/save-progress', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ candidateId, candidateName, engText, bnText })
+            });
+          } catch(e) {}
+        }
+
+        async function submitFinalExam() {
+          if (engTimerInterval) clearInterval(engTimerInterval);
+          if (bnTimerInterval) clearInterval(bnTimerInterval);
+
+          const engText = document.getElementById('eng-typing-area').value;
+          const bnText = document.getElementById('bn-typing-area').value;
+
+          try {
+            const res = await fetch('/api/submit-exam', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ candidateId, candidateName, engText, bnText })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              document.getElementById('bn-card').classList.add('hidden');
+              document.getElementById('success-card').classList.remove('hidden');
+            } else {
+              alert("জমা দিতে সমস্যা হয়েছে: " + data.message);
+            }
+          } catch (err) {
+            alert("সার্ভার ত্রুটি! দয়া করে আবার চেষ্টা করুন।");
+          }
+        }
+    </script>
+</body>
+</html>

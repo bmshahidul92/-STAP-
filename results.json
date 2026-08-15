@@ -1,0 +1,14 @@
+[
+  {
+    "candidateId": "123456",
+    "candidateName": "শহীদুল",
+    "totalWords": 31,
+    "errors": 5,
+    "errorPercent": "16.1",
+    "grossWpm": 15,
+    "netWpm": 13,
+    "accuracy": "83.9",
+    "passed": false,
+    "submittedAt": "2026-08-14T20:22:46.031Z"
+  }
+]

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STAP Admin Panel & Result Sheet</title>
+  <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+  <style>
+    @font-face {
+        font-family: 'Nikosh';
+        src: local('Nikosh'), local('NikoshBAN'), url('https://fonts.cdnfonts.com/s/72895/Nikosh.woff') format('woff');
+        font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Nikosh', 'SolaimanLipi', 'Times New Roman', serif; background: #f4f6f9; padding: 15px; margin: 0; }
+    .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .brand-title { color: #1e3a8a; margin: 0; font-size: 26px; font-weight: bold; }
+    .brand-subtitle { color: #475569; margin: 2px 0 0 0; font-size: 14px; font-weight: bold; }
+    
+    .login-modal { max-width: 420px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    .config-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+    .section-title { font-weight: bold; color: #1e40af; border-bottom: 2px solid #bfdbfe; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px; font-size: 18px; }
+
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { font-weight: bold; font-size: 15px; display: block; margin-bottom: 5px; color: #334155; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 16px; font-family: 'Nikosh', 'Times New Roman', serif; }
+
+    .btn-save { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    .btn-reset { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    .btn-print { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; font-size: 16px; }
+    .btn-logout { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 16px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 14px; }
+    th { background-color: #1e3a8a; color: white; font-size: 15px; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    
+    .badge-pass { background: #dcfce7; color: #15803d; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .badge-fail { background: #fee2e2; color: #b91c1c; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+    .english-num { font-family: 'Times New Roman', Times, serif !important; }
+    .hidden { display: none !important; }
+
+    @media print {
+      .no-print { display: none !important; }
+      .container { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- এডমিন লগইন -->
+  <div id="login-section" class="login-modal">
+    <h2 class="brand-title" style="text-align:center;">STAP Admin Login</h2>
+    <div class="brand-subtitle" style="text-align:center;">Shahidul Typing Assessment Portal</div>
+    <hr style="margin: 15px 0;"><br>
+    <form onsubmit="event.preventDefault(); adminLogin();">
+      <div class="form-group">
+        <label>পাসওয়ার্ড দিন:</label>
+        <input type="password" id="admin-pass-input" class="english-num" required>
+      </div>
+      <button type="submit" class="btn-save" style="width:100%;">প্রবেশ করুন</button>
+    </form>
+    <p style="text-align:center; margin-top:15px;">
+      <a href="#" onclick="showForgotPassword()" style="color:#2563eb; text-decoration:none;">পাসওয়ার্ড ভুলে গেছেন?</a>
+    </p>
+  </div>
+
+  <!-- পাসওয়ার্ড রিকভারি -->
+  <div id="forgot-section" class="login-modal hidden">
+    <h3 style="color:#1e3a8a; text-align:center; margin-top:0;">পাসওয়ার্ড পুনরুদ্ধার</h3>
+    <p id="sec-question-disp" style="font-weight:bold; color:#333; margin-bottom:10px;"></p>
+    <form onsubmit="event.preventDefault(); recoverPassword();">
+      <div class="form-group">
+        <label>সিকিউরিটি উত্তর দিন:</label>
+        <input type="password" id="sec-answer-input" required>
+      </div>
+      <div class="form-group">
+        <label>নতুন পাসওয়ার্ড দিন:</label>
+        <input type="password" id="new-pass-input" class="english-num" required>
+      </div>
+      <button type="submit" class="btn-save" style="width:100%;">পাসওয়ার্ড রিসেট করুন</button>
+      <button type="button" onclick="showLogin()" style="width:100%; margin-top:10px; background:#64748b;" class="btn-save">ফিরে যান</button>
+    </form>
+  </div>
+
+  <!-- ড্যাশবোর্ড -->
+  <div id="admin-dashboard" class="container hidden">
+    <div class="header-area">
+      <div>
+        <h2 class="brand-title">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+        <div class="brand-subtitle">Shahidul Typing Assessment Portal</div>
+      </div>
+      <div class="no-print">
+        <button onclick="window.print()" class="btn-print">🖨️ প্রিন্ট / PDF</button>
+        <button onclick="resetAllData()" class="btn-reset">🗑️ ডাটা রিসেট</button>
+        <button onclick="adminLogout()" class="btn-logout">🚪 লগআউট</button>
+      </div>
+    </div>
+
+    <!-- কাস্টমাইজেশন প্যানেল -->
+    <div class="config-box no-print">
+      <h3 style="margin-top:0; color:#1e40af;">⚙️ পরীক্ষা সেটআপ ও পরীক্ষার্থী অনুমোদন প্যানেল</h3>
+      
+      <div class="config-grid">
+        <div class="form-group">
+            <label>পরীক্ষা কোড (Exam Code):</label>
+            <input type="text" id="cfg-exam-code" class="english-num">
+        </div>
+        <div class="form-group">
+            <label>টাইপিং সময় (মিনিট):</label>
+            <input type="number" id="cfg-duration" class="english-num">
+        </div>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+            <label>ইংরেজি পাসের জন্য সর্বনিম্ন নিট গতি (WPM):</label>
+            <input type="number" id="cfg-eng-min-wpm" class="english-num">
+        </div>
+        <div class="form-group">
+            <label>বাংলা পাসের জন্য সর্বনিম্ন নিট গতি (WPM):</label>
+            <input type="number" id="cfg-bn-min-wpm" class="english-num">
+        </div>
+      </div>
+
+      <!-- অনুমোদিত রোল তালিকা ইনপুট -->
+      <div class="form-group">
+        <label>অনুমোদিত পরীক্ষার্থীদের রোল নম্বরসমূহ (কমা বা নতুন লাইনে আলাদা করুন):</label>
+        <textarea id="cfg-approved-rolls" rows="3" class="english-num" placeholder="যেমন: 101, 102, 103"></textarea>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+            <label>ইংরেজি পাসেজ (প্রশ্ন):</label>
+            <textarea id="cfg-eng-passage" rows="3" class="english-num"></textarea>
+        </div>
+        <div class="form-group">
+            <label>বাংলা পাসেজ (প্রশ্ন):</label>
+            <textarea id="cfg-bn-passage" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- রোল পারমিশন অপশন -->
+      <div class="section-title">🔄 পুনরায় টাইপিং অনুমতি (একক রোল রিসেট)</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <input type="text" id="reset-roll-input" class="english-num" placeholder="রোল নম্বর দিন" style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <button onclick="allowReType()" class="btn-save" style="background:#ea580c;">পুনরায় টাইপ করার অনুমতি দিন</button>
+      </div>
+
+      <!-- পাসওয়ার্ড পরিবর্তন -->
+      <div class="section-title">🔑 পাসওয়ার্ড ও সিকিউরিটি পরিবর্তন</div>
+      <div class="config-grid">
+        <div class="form-group">
+          <label>বর্তমান পাসওয়ার্ড:</label>
+          <input type="password" id="cfg-curr-pass" class="english-num">
+        </div>
+        <div class="form-group">
+          <label>নতুন পাসওয়ার্ড:</label>
+          <input type="password" id="cfg-new-pass" class="english-num">
+        </div>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+          <label>সিকিউরিটি প্রশ্ন:</label>
+          <input type="text" id="cfg-sec-q">
+        </div>
+        <div class="form-group">
+          <label>বর্তমান সিকিউরিটি উত্তর:</label>
+          <input type="password" id="cfg-curr-sec-a">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>নতুন সিকিউরিটি উত্তর:</label>
+        <input type="password" id="cfg-new-sec-a">
+      </div>
+
+      <button onclick="saveConfig()" class="btn-save" style="margin-top:15px;">সেটিংস সেভ করুন</button>
+    </div>
+
+    <h3>📊 সকল পরীক্ষার্থীর রেজাল্ট তালিকা</h3>
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">রোল</th>
+          <th rowspan="2">পরীক্ষার্থীর নাম</th>
+          <th rowspan="2">পরীক্ষা কোড</th>
+          <th rowspan="2">জমা দেওয়ার সময়</th>
+          <th colspan="8">ইংরেজি টাইপিং</th>
+          <th colspan="8">বাংলা টাইপিং</th>
+          <th rowspan="2">চূড়ান্ত ফল</th>
+          <th rowspan="2" class="no-print">অ্যাকশন</th>
+        </tr>
+        <tr>
+          <!-- English Header -->
+          <th>মোট শব্দ</th>
+          <th>সঠিক</th>
+          <th>সঠিকতা</th>
+          <th>ভুল</th>
+          <th>ভুল (%)</th>
+          <th>নিট WPM</th>
+          <th>মোট WPM</th>
+          <th>ফলাফল</th>
+          <!-- Bangla Header -->
+          <th>মোট শব্দ</th>
+          <th>সঠিক</th>
+          <th>সঠিকতা</th>
+          <th>ভুল</th>
+          <th>ভুল (%)</th>
+          <th>নিট WPM</th>
+          <th>মোট WPM</th>
+          <th>ফলাফল</th>
+        </tr>
+      </thead>
+      <tbody id="results-body">
+        <tr><td colspan="21">ডাটা লোড হচ্ছে...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    async function adminLogin() {
+      const password = document.getElementById('admin-pass-input').value;
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        loadConfig();
+        loadResults();
+      } else alert(data.message);
+    }
+
+    function adminLogout() {
+      document.getElementById('admin-dashboard').classList.add('hidden');
+      document.getElementById('login-section').classList.remove('hidden');
+    }
+
+    async function showForgotPassword() {
+      const res = await fetch('/api/admin/security-question');
+      const data = await res.json();
+      document.getElementById('sec-question-disp').innerText = "প্রশ্ন: " + data.question;
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('forgot-section').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('forgot-section').classList.add('hidden');
+      document.getElementById('login-section').classList.remove('hidden');
+    }
+
+    async function recoverPassword() {
+      const answer = document.getElementById('sec-answer-input').value;
+      const newPassword = document.getElementById('new-pass-input').value;
+      const res = await fetch('/api/admin/recover-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer, newPassword })
+      });
+      const data = await res.json();
+      alert(data.message);
+      if(data.success) showLogin();
+    }
+
+    async function loadConfig() {
+      const res = await fetch('/api/admin/full-config');
+      const data = await res.json();
+      document.getElementById('cfg-exam-code').value = data.examCode || '';
+      document.getElementById('cfg-duration').value = data.duration || 5;
+      document.getElementById('cfg-eng-min-wpm').value = data.engMinPassWpm || 20;
+      document.getElementById('cfg-bn-min-wpm').value = data.bnMinPassWpm || 15;
+      document.getElementById('cfg-eng-passage').value = data.engPassage || '';
+      document.getElementById('cfg-bn-passage').value = data.bnPassage || '';
+      document.getElementById('cfg-sec-q').value = data.securityQuestion || '';
+      document.getElementById('cfg-approved-rolls').value = data.approvedRolls ? data.approvedRolls.join(', ') : '';
+    }
+
+    async function saveConfig() {
+      const res = await fetch('/api/admin/update-config', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          examCode: document.getElementById('cfg-exam-code').value,
+          duration: document.getElementById('cfg-duration').value,
+          engMinPassWpm: document.getElementById('cfg-eng-min-wpm').value,
+          bnMinPassWpm: document.getElementById('cfg-bn-min-wpm').value,
+          engPassage: document.getElementById('cfg-eng-passage').value,
+          bnPassage: document.getElementById('cfg-bn-passage').value,
+          approvedRolls: document.getElementById('cfg-approved-rolls').value,
+          currPass: document.getElementById('cfg-curr-pass').value,
+          newPass: document.getElementById('cfg-new-pass').value,
+          secQ: document.getElementById('cfg-sec-q').value,
+          currSecAns: document.getElementById('cfg-curr-sec-a').value,
+          newSecAns: document.getElementById('cfg-new-sec-a').value
+        })
+      });
+      const data = await res.json();
+      alert(data.message);
+      if(data.success) loadConfig();
+    }
+
+    async function allowReType() {
+      const roll = document.getElementById('reset-roll-input').value.trim();
+      if(!roll) return alert("রোল নম্বর দিন!");
+      const res = await fetch('/api/admin/reset-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId: roll })
+      });
+      const data = await res.json();
+      alert(data.message);
+      document.getElementById('reset-roll-input').value = '';
+    }
+
+    async function loadResults() {
+      const res = await fetch('/api/results');
+      const results = await res.json();
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = '';
+
+      if (!results || results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="21">এখনো কোনো পরীক্ষা জমা পড়েনি।</td></tr>';
+        return;
+      }
+
+      results.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        const overallStatus = row.overallPassed 
+          ? `<span class="badge-pass">কৃতকার্য</span>` 
+          : `<span class="badge-fail">অকৃতকার্য</span>`;
+
+        tr.innerHTML = `
+          <td class="english-num"><strong>${row.candidateId}</strong></td>
+          <td>${row.candidateName}</td>
+          <td class="english-num">${row.examCode || '-'}</td>
+          <td class="english-num">${row.submittedAt || '-'}</td>
+          
+          <!-- English Results -->
+          <td class="english-num">${row.english.totalWords}</td>
+          <td class="english-num">${row.english.correctWords}</td>
+          <td class="english-num">${row.english.accuracy}%</td>
+          <td class="english-num">${row.english.errors}</td>
+          <td class="english-num">${row.english.errorPercent}%</td>
+          <td class="english-num"><strong>${row.english.netWpm}</strong></td>
+          <td class="english-num">${row.english.grossWpm}</td>
+          <td>${row.english.passed ? '<span class="badge-pass">পাস</span>' : '<span class="badge-fail">ফেল</span>'}</td>
+
+          <!-- Bangla Results -->
+          <td class="english-num">${row.bangla.totalWords}</td>
+          <td class="english-num">${row.bangla.correctWords}</td>
+          <td class="english-num">${row.bangla.accuracy}%</td>
+          <td class="english-num">${row.bangla.errors}</td>
+          <td class="english-num">${row.bangla.errorPercent}%</td>
+          <td class="english-num"><strong>${row.bangla.netWpm}</strong></td>
+          <td class="english-num">${row.bangla.grossWpm}</td>
+          <td>${row.bangla.passed ? '<span class="badge-pass">পাস</span>' : '<span class="badge-fail">ফেল</span>'}</td>
+
+          <td>${overallStatus}</td>
+          <td class="no-print">
+            <button onclick="deleteResult(${idx})" class="btn-delete">মুছুন</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function deleteResult(index) {
+      if (confirm("এই রেজাল্টটি মুছে ফেলতে চান?")) {
+        await fetch(`/api/results/${index}`, { method: 'DELETE' });
+        loadResults();
+      }
+    }
+
+    async function resetAllData() {
+      if (confirm("সকল ফলাফল রিসেট করতে চান?")) {
+        await fetch('/api/results', { method: 'DELETE' });
+        loadResults();
+      }
+    }
+
+    try {
+      const socket = io();
+      socket.on('exam_submitted', () => loadResults());
+    } catch(e){}
+  </script>
+</body>
+</html>
