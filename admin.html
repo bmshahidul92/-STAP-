@@ -15,7 +15,7 @@
     body { font-family: 'Nikosh', 'SolaimanLipi', 'Times New Roman', serif; background: #f4f6f9; padding: 15px; margin: 0; }
     .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     
-    .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
     .brand-title { color: #1e3a8a; margin: 0; font-size: 26px; font-weight: bold; }
     .brand-subtitle { color: #475569; margin: 2px 0 0 0; font-size: 14px; font-weight: bold; }
     
@@ -30,8 +30,8 @@
 
     .btn-save { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
     .btn-reset { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
-    .btn-print { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; font-size: 16px; }
-    .btn-logout { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 16px; }
+    .btn-print { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 5px; font-size: 16px; }
+    .btn-logout { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; font-size: 16px; }
     .btn-view { background: #7c3aed; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -44,6 +44,9 @@
     .btn-delete { background: #ef4444; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
     .english-num { font-family: 'Times New Roman', Times, serif !important; }
     .hidden { display: none !important; }
+
+    /* ফিল্টার সেকশন স্টাইল */
+    .filter-bar { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
 
     /* মোডাল ডিজাইন (টাইপ করা কপি দেখার জন্য) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
@@ -162,20 +165,21 @@
         <textarea id="cfg-new-rolls" rows="2" class="english-num" placeholder="যেমন: 101, 102, 103"></textarea>
       </div>
 
-      <!-- রোলভিত্তিক মেয়াদ (Expiry) ও ব্লক/আনব্লক টেবিল -->
-      <div class="section-title">📋 নিবন্ধিত রোলসমূহ ও মেয়াদ/ব্লক ম্যানেজমেন্ট</div>
-      <div style="max-height:220px; overflow-y:auto; border:1px solid #cbd5e1; background:#fff; margin-bottom:15px;">
+      <!-- রোলভিত্তিক মেয়াদ (Expiry), ব্লক/আনব্লক ও নির্দিষ্ট পরীক্ষা কোড টেবিল -->
+      <div class="section-title">📋 নিবন্ধিত রোলসমূহ ও পরীক্ষা কোড ম্যানেজমেন্ট</div>
+      <div style="max-height:250px; overflow-y:auto; border:1px solid #cbd5e1; background:#fff; margin-bottom:15px;">
         <table>
           <thead>
             <tr>
               <th>রোল নম্বর</th>
-              <th>মেয়াদ উত্তীর্ণের তারিখ ও সময় (Expiry Time)</th>
+              <th>অনুমোদিত পরীক্ষা কোড (যেমন: BCC2026, EXAM2)</th>
+              <th>মেয়াদ উত্তীর্ণের তারিখ ও সময়</th>
               <th>ব্লক স্ট্যাটাস</th>
               <th>অ্যাকশন</th>
             </tr>
           </thead>
           <tbody id="roll-settings-body">
-            <tr><td colspan="4">কোনো রোল নিবন্ধিত নেই।</td></tr>
+            <tr><td colspan="5">কোনো রোল নিবন্ধিত নেই।</td></tr>
           </tbody>
         </table>
       </div>
@@ -193,8 +197,9 @@
 
       <!-- পুনরায় টাইপিং অনুমতি (একক রোল রিসেট) -->
       <div class="section-title">🔄 পুনরায় টাইপিং অনুমতি (সেশন রিসেট)</div>
-      <div style="display:flex; gap:10px; align-items:center;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <input type="text" id="reset-roll-input" class="english-num" placeholder="রোল নম্বর দিন" style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <input type="text" id="reset-code-input" class="english-num" placeholder="পরীক্ষা কোড (ঐচ্ছিক)" style="width:180px; padding:8px; border:1px solid #ccc; border-radius:4px;">
         <button onclick="allowReType()" class="btn-save" style="background:#ea580c;">পুনরায় টাইপ করার অনুমতি দিন</button>
       </div>
 
@@ -229,45 +234,64 @@
       <button onclick="saveConfig()" class="btn-save" style="margin-top:15px;">সেটিংস ও রোল আপডেট করুন</button>
     </div>
 
+    <!-- ফিল্টার ও প্রিন্ট অপশন সেকশন -->
+    <div class="filter-bar no-print">
+      <h3 style="margin:0; width:100%; color:#1e3a8a;">🔍 ফলাফল ফিল্টার ও প্রিন্ট</h3>
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label>পরীক্ষা কোড দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
+        <input type="text" id="filter-exam-codes" class="english-num" placeholder="যেমন: BCC2026, EXAM2">
+      </div>
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label>রোল নম্বর দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
+        <input type="text" id="filter-rolls" class="english-num" placeholder="যেমন: 101, 102, 105">
+      </div>
+      <div>
+        <button onclick="loadResults()" class="btn-save" style="padding:8px 15px; margin-right:5px;">ফিল্টার প্রয়োগ করুন</button>
+        <button onclick="clearFilter()" class="btn-logout" style="background:#64748b; margin-left:0;">রিসেট</button>
+      </div>
+    </div>
+
     <h3>📊 সকল পরীক্ষার্থীর রেজাল্ট তালিকা</h3>
-    <table>
-      <thead>
-        <tr>
-          <th rowspan="2">রোল</th>
-          <th rowspan="2">পরীক্ষার্থীর নাম</th>
-          <th rowspan="2">পরীক্ষা কোড</th>
-          <th rowspan="2">জমা দেওয়ার সময়</th>
-          <th colspan="8">ইংরেজি টাইপিং</th>
-          <th colspan="8">বাংলা টাইপিং</th>
-          <th rowspan="2">চূড়ান্ত ফল</th>
-          <th rowspan="2" class="no-print">কপি দেখুন</th>
-          <th rowspan="2" class="no-print">অ্যাকশন</th>
-        </tr>
-        <tr>
-          <!-- English Header -->
-          <th>মোট শব্দ</th>
-          <th>সঠিক</th>
-          <th>সঠিকতা</th>
-          <th>ভুল</th>
-          <th>ভুল (%)</th>
-          <th>নিট WPM</th>
-          <th>মোট WPM</th>
-          <th>ফলাফল</th>
-          <!-- Bangla Header -->
-          <th>মোট শব্দ</th>
-          <th>সঠিক</th>
-          <th>সঠিকতা</th>
-          <th>ভুল</th>
-          <th>ভুল (%)</th>
-          <th>নিট WPM</th>
-          <th>মোট WPM</th>
-          <th>ফলাফল</th>
-        </tr>
-      </thead>
-      <tbody id="results-body">
-        <tr><td colspan="22">ডাটা লোড হচ্ছে...</td></tr>
-      </tbody>
-    </table>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">রোল</th>
+            <th rowspan="2">পরীক্ষার্থীর নাম</th>
+            <th rowspan="2">পরীক্ষা কোড</th>
+            <th rowspan="2">জমা দেওয়ার সময়</th>
+            <th colspan="8">ইংরেজি টাইপিং</th>
+            <th colspan="8">বাংলা টাইপিং</th>
+            <th rowspan="2">চূড়ান্ত ফল</th>
+            <th rowspan="2" class="no-print">কপি দেখুন</th>
+            <th rowspan="2" class="no-print">অ্যাকশন</th>
+          </tr>
+          <tr>
+            <!-- English Header -->
+            <th>মোট শব্দ</th>
+            <th>সঠিক</th>
+            <th>সঠিকতা</th>
+            <th>ভুল</th>
+            <th>ভুল (%)</th>
+            <th>নিট WPM</th>
+            <th>মোট WPM</th>
+            <th>ফলাফল</th>
+            <!-- Bangla Header -->
+            <th>মোট শব্দ</th>
+            <th>সঠিক</th>
+            <th>সঠিকতা</th>
+            <th>ভুল</th>
+            <th>ভুল (%)</th>
+            <th>নিট WPM</th>
+            <th>মোট WPM</th>
+            <th>ফলাফল</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+          <tr><td colspan="22">ডাটা লোড হচ্ছে...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- পরীক্ষার্থীর টাইপ করা কপি দেখার মোডাল -->
@@ -357,15 +381,17 @@
       const rolls = Object.keys(rollSettings);
 
       if (rolls.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">কোনো রোল নিবন্ধিত নেই। নতুন রোল যোগ করুন।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">কোনো রোল নিবন্ধিত নেই। নতুন রোল যোগ করুন।</td></tr>';
         return;
       }
 
       rolls.forEach(roll => {
         const info = rollSettings[roll];
+        const allowedCodesStr = Array.isArray(info.allowedExamCodes) ? info.allowedExamCodes.join(', ') : (info.allowedExamCodes || data.examCode);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="english-num"><strong>${roll}</strong></td>
+          <td><input type="text" class="english-num roll-allowed-codes" data-roll="${roll}" value="${allowedCodesStr}" style="padding:4px;" placeholder="যেমন: BCC2026, EXAM2"></td>
           <td><input type="datetime-local" class="english-num roll-expiry" data-roll="${roll}" value="${info.expiryTime || ''}" style="padding:4px;"></td>
           <td>
             <label style="cursor:pointer;">
@@ -381,14 +407,17 @@
     }
 
     async function saveConfig() {
-      // টেবিল থেকে প্রতিটি রোলের এক্সপায়ারি এবং ব্লক স্ট্যাটাস সংগ্রহ করা
       const rollUpdates = [];
       document.querySelectorAll('.roll-expiry').forEach(input => {
         const roll = input.getAttribute('data-roll');
         const expiryTime = input.value;
         const blockCheckbox = document.querySelector(`.roll-block[data-roll="${roll}"]`);
+        const allowedCodesInput = document.querySelector(`.roll-allowed-codes[data-roll="${roll}"]`);
+        
         const isBlocked = blockCheckbox ? blockCheckbox.checked : false;
-        rollUpdates.push({ roll, expiryTime, isBlocked });
+        const allowedExamCodes = allowedCodesInput ? allowedCodesInput.value : '';
+
+        rollUpdates.push({ roll, expiryTime, isBlocked, allowedExamCodes });
       });
 
       const res = await fetch('/api/admin/update-config', {
@@ -431,24 +460,36 @@
 
     async function allowReType() {
       const roll = document.getElementById('reset-roll-input').value.trim();
+      const examCode = document.getElementById('reset-code-input').value.trim();
       if(!roll) return alert("রোল নম্বর দিন!");
+      
       const res = await fetch('/api/admin/reset-session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidateId: roll })
+        body: JSON.stringify({ candidateId: roll, examCode })
       });
       const data = await res.json();
       alert(data.message);
       document.getElementById('reset-roll-input').value = '';
+      document.getElementById('reset-code-input').value = '';
     }
 
     async function loadResults() {
-      const res = await fetch('/api/results');
+      const examCodes = document.getElementById('filter-exam-codes').value.trim();
+      const rolls = document.getElementById('filter-rolls').value.trim();
+
+      let queryParams = new URLSearchParams();
+      if (examCodes) queryParams.append('examCodes', examCodes);
+      if (rolls) queryParams.append('rolls', rolls);
+
+      const url = `/api/results${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
+      const res = await fetch(url);
       globalResults = await res.json();
       const tbody = document.getElementById('results-body');
       tbody.innerHTML = '';
 
       if (!globalResults || globalResults.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="22">এখনো কোনো পরীক্ষা জমা পড়েনি।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="22">কোনো ফলাফল পাওয়া যায়নি।</td></tr>';
         return;
       }
 
@@ -496,6 +537,12 @@
       });
     }
 
+    function clearFilter() {
+      document.getElementById('filter-exam-codes').value = '';
+      document.getElementById('filter-rolls').value = '';
+      loadResults();
+    }
+
     async function loadActiveSessions() {
       const res = await fetch('/api/admin/active-sessions');
       const sessions = await res.json();
@@ -527,8 +574,8 @@
       const row = globalResults[index];
       if (!row) return;
       document.getElementById('modal-candidate-title').innerText = `রোল: ${row.candidateId} (${row.candidateName}) - টাইপকৃত কপি`;
-      document.getElementById('modal-eng-text').innerText = row.engText || 'কোনো টেক্সট পাওয়া যায়নি।';
-      document.getElementById('modal-bn-text').innerText = row.bnText || 'কোনো টেক্সট পাওয়া যায়নি।';
+      document.getElementById('modal-eng-text').innerText = row.engText || 'কোনো টেক্সট পাওয়া যায়নি।';
+      document.getElementById('modal-bn-text').innerText = row.bnText || 'কোনো টেক্সট পাওয়া যায়নি।';
       document.getElementById('typed-copy-modal').classList.remove('hidden');
     }
 
@@ -554,7 +601,7 @@
       }
     }
 
-    // Socket.io রিয়েল-টাইম আপডেট হ্যান্ডলিং
+    // Socket.io রিয়েল-টাইম আপডেট হ্যান্ডলিং
     try {
       const socket = io();
       socket.on('exam_submitted', () => {
