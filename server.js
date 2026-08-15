@@ -165,40 +165,68 @@ app.post('/api/save-progress', (req, res) => {
   res.json({ success: true });
 });
 
+// নিখুঁত টাইপিং মেট্রিকস (WPM, Accuracy, Errors) ক্যালকুলেশন ফাংশন
 function calculateMetrics(original, typed, durationMin, minPassWpm) {
-  const cleanTyped = typed || "";
-  const totalChars = cleanTyped.length;
-  const standardWords = totalChars / 5;
+  const cleanOriginal = (original || "").trim();
+  const cleanTyped = (typed || "").trim();
 
-  const origWords = original.trim().split(/\s+/);
-  const typedWords = cleanTyped.trim().split(/\s+/).filter(w => w.length > 0);
+  if (cleanTyped === "") {
+    return {
+      totalWords: 0,
+      correctWords: 0,
+      errors: 0,
+      accuracy: 0,
+      errorPercent: 100,
+      grossWpm: 0,
+      netWpm: 0,
+      passed: false
+    };
+  }
+
+  const origWords = cleanOriginal.split(/\s+/);
+  const typedWords = cleanTyped.split(/\s+/);
   
   let correctWords = 0;
   let errors = 0;
 
+  // প্রতিটি শব্দের সঠিক পজিশন অনুযায়ী তুলনা করা
   typedWords.forEach((word, idx) => {
-    if (origWords[idx] && origWords[idx] === word) {
-      correctWords++;
+    if (origWords[idx] !== undefined) {
+      if (origWords[idx] === word) {
+        correctWords++;
+      } else {
+        errors++;
+      }
     } else {
+      // অতিরিক্ত টাইপ করা শব্দগুলোকে ভুল হিসেবে গণনা করা
       errors++;
     }
   });
 
+  // মূল প্যাসেজের যে শব্দগুলো বাদ পড়েছে সেগুলোকে ভুল বা মিসিং হিসেবে ধরা যেতে পারে, 
+  // তবে স্ট্যান্ডার্ড নিয়মে টাইপকৃত শব্দের ওপর ভিত্তি করেই হিসাব করা হয়।
   const totalTypedCount = typedWords.length;
-  const accuracy = totalTypedCount > 0 ? ((correctWords / totalTypedCount) * 100).toFixed(1) : 100;
-  const errorPercent = totalTypedCount > 0 ? ((errors / totalTypedCount) * 100).toFixed(1) : 0;
+  
+  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ বা সরাসরি টাইপকৃত শব্দের সংখ্যা)
+  const totalChars = cleanTyped.length;
+  const standardWords = totalChars / 5;
+
+  const accuracy = totalTypedCount > 0 ? parseFloat(((correctWords / totalTypedCount) * 100).toFixed(1)) : 0;
+  const errorPercent = totalTypedCount > 0 ? parseFloat(((errors / totalTypedCount) .toFixed(1))) : 0;
   
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
+  
+  // নেট WPM হিসাব (সঠিক শব্দ প্রতি মিনিটে - ভুল শব্দ প্রতি মিনিটে)
   const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin) - (errors / durationMin))) : 0;
   
-  const isPassed = parseFloat(errorPercent) < 5.0 && netWpm >= minPassWpm;
+  const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
     totalWords: Math.round(standardWords),
     correctWords,
     errors,
-    accuracy: parseFloat(accuracy),
-    errorPercent: parseFloat(errorPercent),
+    accuracy,
+    errorPercent,
     grossWpm,
     netWpm,
     passed: isPassed
