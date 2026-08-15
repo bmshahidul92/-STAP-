@@ -45,6 +45,11 @@ function loadData() {
         db = { ...db, ...parsedData };
         // নিশ্চিত করার জন্য অবজেক্টগুলো চেক করা
         if (!db.config) db.config = {};
+        // ডিফল্ট পাসওয়ার্ড বা সিকিউরিটি যেন না হারায়
+        if (!db.config.adminPassword) db.config.adminPassword = "admin";
+        if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
+        if (!db.config.securityAnswer) db.config.securityAnswer = "blue";
+        
         if (!db.rollSettings) db.rollSettings = {};
         if (!db.completedRolls) db.completedRolls = {};
         if (!db.results) db.results = [];
@@ -241,22 +246,25 @@ app.get('/api/admin/full-config', (req, res) => {
   });
 });
 
+// পাসওয়ার্ড ও অন্যান্য সেটিংস আপডেট রাউট (নিরাপদ ও স্থায়ী সেভ সহ)
 app.post('/api/admin/update-config', (req, res) => {
   const { 
     examCode, engPassage, bnPassage, duration, engMinPassWpm, bnMinPassWpm, 
     currPass, newPass, secQ, currSecAns, newSecAns, rollUpdates, newRolls 
   } = req.body;
 
-  if (currPass && currPass !== db.config.adminPassword) {
+  // শুধুমাত্র বর্তমান পাসওয়ার্ড ফিল্ড দিয়ে থাকলে এবং তা ভুল হলে চেক করবে
+  if (currPass && currPass.trim() !== "" && currPass !== db.config.adminPassword) {
     return res.json({ success: false, message: "বর্তমান পাসওয়ার্ড ভুল!" });
   }
-  if (currSecAns && currSecAns !== db.config.securityAnswer) {
+  
+  if (currSecAns && currSecAns.trim() !== "" && currSecAns !== db.config.securityAnswer) {
     return res.json({ success: false, message: "বর্তমান সিকিউরিটি উত্তর ভুল!" });
   }
 
   if (examCode) db.config.examCode = examCode;
-  if (engPassage) db.config.engPassage = engPassage;
-  if (bnPassage) db.config.bnPassage = bnPassage;
+  if (engPassage !== undefined) db.config.engPassage = engPassage;
+  if (bnPassage !== undefined) db.config.bnPassage = bnPassage;
   if (duration) db.config.duration = parseInt(duration);
   if (engMinPassWpm) db.config.engMinPassWpm = parseInt(engMinPassWpm);
   if (bnMinPassWpm) db.config.bnMinPassWpm = parseInt(bnMinPassWpm);
@@ -281,7 +289,7 @@ app.post('/api/admin/update-config', (req, res) => {
   }
 
   // নতুন রোল যোগ করার টেক্সট প্রসেসিং
-  if (newRolls) {
+  if (newRolls && newRolls.trim() !== "") {
     const list = newRolls.split(/[\n,]+/).map(r => r.trim()).filter(r => r.length > 0);
     list.forEach(r => {
       if (!db.rollSettings[r]) {
@@ -290,12 +298,14 @@ app.post('/api/admin/update-config', (req, res) => {
     });
   }
 
-  if (newPass) db.config.adminPassword = newPass;
-  if (secQ) db.config.securityQuestion = secQ;
-  if (newSecAns) db.config.securityAnswer = newSecAns;
+  if (newPass && newPass.trim() !== "") db.config.adminPassword = newPass.trim();
+  if (secQ && secQ.trim() !== "") db.config.securityQuestion = secQ.trim();
+  if (newSecAns && newSecAns.trim() !== "") db.config.securityAnswer = newSecAns.trim();
 
+  // তাৎক্ষণিকভাবে ফাইল সিস্টেমে পার্মানেন্ট সেভ করা নিশ্চিত করা
   saveData();
-  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে আপডেট হয়েছে!" });
+  
+  res.json({ success: true, message: "সেটিংস ও রোল ম্যানেজমেন্ট সফলভাবে স্থায়ীভাবে আপডেট হয়েছে!" });
 });
 
 app.post('/api/admin/delete-roll', (req, res) => {
@@ -337,11 +347,17 @@ app.get('/api/admin/security-question', (req, res) => res.json({ question: db.co
 
 app.post('/api/admin/recover-password', (req, res) => {
   const { answer, newPassword } = req.body;
-  if (answer === db.config.securityAnswer) {
-    db.config.adminPassword = newPassword;
-    saveData();
-    res.json({ success: true, message: "পাসওয়ার্ড সফলভাবে রিকভার হয়েছে!" });
-  } else res.json({ success: false, message: "ভুল সিকিউরিটি উত্তর!" });
+  if (answer && answer.trim() === db.config.securityAnswer) {
+    if (newPassword && newPassword.trim() !== "") {
+      db.config.adminPassword = newPassword.trim();
+      saveData();
+      return res.json({ success: true, message: "পাসওয়ার্ড সফলভাবে রিকভার হয়েছে!" });
+    } else {
+      return res.json({ success: false, message: "নতুন পাসওয়ার্ড দিন।" });
+    }
+  } else {
+    return res.json({ success: false, message: "ভুল সিকিউরিটি উত্তর!" });
+  }
 });
 
 // ফিল্টার সহ রেজাল্ট ফেচ করার রুট (যেমন: নির্দিষ্ট পরীক্ষা কোড বা রোল অনুযায়ী)
