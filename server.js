@@ -99,6 +99,11 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 function calculateMetrics(original, typed, durationMin, minPassWpm) {
+  const totalChars = typed.length; // মোট স্ট্রোক বা ক্যারেক্টার (স্পেসসহ)
+  
+  // ৫টি স্ট্রোকে ১টি শব্দ (Standard Word = 5 characters) হিসাব করা হচ্ছে
+  const standardWords = totalChars / 5; 
+
   const origWords = original.trim().split(/\s+/);
   const typedWords = typed.trim().split(/\s+/).filter(w => w.length > 0);
   
@@ -113,17 +118,21 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
     }
   });
 
-  const totalWords = typedWords.length;
-  const accuracy = totalWords > 0 ? ((correctWords / totalWords) * 100).toFixed(1) : 100;
-  const errorPercent = totalWords > 0 ? ((errors / totalWords) * 100).toFixed(1) : 0;
+  const totalWordsCount = typedWords.length;
+  // ৫% ভুলের হিসাব প্রমিত নিয়মে মোট শব্দের সাপেক্ষে করা হচ্ছে
+  const accuracy = totalWordsCount > 0 ? ((correctWords / totalWordsCount) * 100).toFixed(1) : 100;
+  const errorPercent = totalWordsCount > 0 ? ((errors / totalWordsCount) * 100).toFixed(1) : 0;
   
-  const grossWpm = durationMin > 0 ? Math.round(totalWords / durationMin) : 0;
-  const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords - errors) / durationMin)) : 0;
+  // ৫ স্ট্রোক = ১ শব্দ ফর্মুলা অনুযায়ী WPM গণনা
+  const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
+  
+  // নেট ডব্লিউপিএম হিসাব (স্ট্যান্ডার্ড শব্দ বা সঠিক শব্দের অনুপাত থেকে প্রতি মিনিটের ভুল বাদ দিয়ে)
+  const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin) - (errors / durationMin))) : 0;
   
   const isPassed = parseFloat(errorPercent) < 5.0 && netWpm >= minPassWpm;
 
   return {
-    totalWords,
+    totalWords: Math.round(standardWords), // স্ট্রোকে হিসাবকৃত স্ট্যান্ডার্ড শব্দের সংখ্যা
     correctWords,
     errors,
     accuracy,
