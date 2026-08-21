@@ -166,23 +166,12 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
- // ১. স্পেস বাদ দিয়ে মাইক্রোসফট ওয়ার্ডের মতো নিখুঁত গ্রাফিম বা ক্যারেক্টার গোনার ফাংশন
-const getCleanChars = (text) => {
-    if (!text) return [];
-    // প্রথমে সব ধরনের স্পেস বা হোয়াইটস্পেস রিমুভ করে নেওয়া
-    const cleanText = text.replace(/\s+/g, '');
-    // Intl.Segmenter দিয়ে প্রতিটি দৃশ্যমান বাংলা বা ইংরেজি অক্ষর আলাদা করা
-    return Array.from(
-        new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' }).segment(cleanText),
-        x => x.segment
-    );
-};
+ // ১. স্পেস বাদ দিয়ে শুধু লেখা বা ক্যারেক্টারগুলো নেওয়া
+const origClean = origText.replace(/\s+/g, '');
+const typedClean = typeText.replace(/\s+/g, '');
 
-const origCleanChars = getCleanChars(origText);
-const typedCleanChars = getCleanChars(typeText);
-
-const totalOriginalChars = origCleanChars.length; // স্পেস ছাড়া প্রশ্নের মোট ক্যারেক্টার
-const totalTypedChars = typedCleanChars.length;   // স্পেস ছাড়া মোট টাইপকৃত ক্যারেক্টার
+const totalTypedChars = typedClean.length;         // স্পেস ছাড়া মোট টাইপকৃত ক্যারেক্টার
+const totalOriginalChars = origClean.length;     // স্পেস ছাড়া প্রশ্নের মোট ক্যারেক্টার
 
 let correctChars = 0;
 let errors = 0;
@@ -192,25 +181,19 @@ const origWords = origText.trim().split(/\s+/);
 const typedWords = typeText.trim().split(/\s+/);
 
 for (let i = 0; i < origWords.length; i++) {
-    const origWord = origWords[i] || "";
-    const typedWord = typedWords[i] || "";
-
-    const origWordChars = getCleanChars(origWord);
-
-    if (typedWord === origWord) {
-        // শব্দ সঠিক হলে স্পেস ছাড়া ওই শব্দের আসল ক্যারেক্টার সংখ্যা যোগ হবে
-        correctChars += origWordChars.length;
+    if (typedWords[i] === origWords[i]) {
+        // শব্দ সঠিক হলে স্পেস বাদ দিয়ে ওই শব্দের ক্যারেক্টারগুলো যোগ হবে
+        correctChars += origWords[i] ? origWords[i].replace(/\s+/g, '').length : 0;
     } else {
         // শব্দ ভুল হলে মূল শব্দের ক্যারেক্টারগুলো ভুল হিসেবে যোগ হবে
-        errors += origWordChars.length;
+        errors += origWords[i] ? origWords[i].replace(/\s+/g, '').length : 0;
     }
 }
 
 // ৩. অতিরিক্ত টাইপ করলে তাও ভুল ধরবে
 if (typedWords.length > origWords.length) {
     for (let j = origWords.length; j < typedWords.length; j++) {
-        const extraChars = getCleanChars(typedWords[j] || "");
-        errors += extraChars.length;
+        errors += typedWords[j] ? typedWords[j].replace(/\s+/g, '').length : 0;
     }
 }
 
