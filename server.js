@@ -164,12 +164,15 @@ app.post('/api/save-progress', (req, res) => {
   res.json({ success: true });
 });
 
-// নির্ভুল টাইপিং মেট্রিকস (Gross WPM, Net WPM, Accuracy, Errors) ক্যালকুলেশন
+/**
+ * আন্তর্জাতিক মানদণ্ড অনুযায়ী মেট্রিকস ক্যালকুলেশন (৫ স্ট্রোক = ১ শব্দ, স্পেসসহ ক্যারেক্টার গণনা)
+ * ভুল ৫% বা তার বেশি (errorPercent >= 5.0) হলে ফেল হিসেবে গণ্য হবে।
+ */
 function calculateMetrics(original, typed, durationMin, minPassWpm) {
-  const cleanOriginal = (original || "").trim();
-  const cleanTyped = (typed || "").trim();
+  const cleanOriginal = (original || "");
+  const cleanTyped = (typed || "");
 
-  if (cleanTyped === "") {
+  if (cleanTyped.trim() === "") {
     return {
       totalWords: 0,
       correctWords: 0,
@@ -182,40 +185,46 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
     };
   }
 
-  const origWords = cleanOriginal.split(/\s+/);
-  const typedWords = cleanTyped.split(/\s+/).filter(w => w.length > 0);
-  
-  let correctWords = 0;
+  // ১. আন্তর্জাতিক নিয়ম অনুযায়ী স্পেসসহ মোট টাইপকৃত স্ট্রোক/ক্যারেক্টার গণনা
+  const totalTypedChars = cleanTyped.length;
+  const standardWords = totalTypedChars / 5; // ৫ স্ট্রোক বা ক্যারেক্টার = ১ শব্দ
+
+  // ২. মূল টেক্সট ও টাইপকৃত টেক্সটের ক্যারেক্টার বাই ক্যারেক্টার নিখুঁত তুলনা
+  const origChars = Array.from(cleanOriginal);
+  const typedChars = Array.from(cleanTyped);
+
+  let correctChars = 0;
   let errors = 0;
 
-  // শব্দ ধরে নিখুঁত তুলনা
-  typedWords.forEach((word, index) => {
-    if (origWords[index] === word) {
-      correctWords++;
+  typedChars.forEach((char, index) => {
+    if (origChars[index] === char) {
+      correctChars++;
     } else {
       errors++;
     }
   });
 
-  if (typedWords.length > origWords.length) {
-    errors += (typedWords.length - origWords.length);
+  // যদি টাইপ করা লেখা মূল লেখার চেয়ে বড় হয়, তবে অতিরিক্ত অংশ ভুল হিসেবে যোগ হবে
+  if (typedChars.length > origChars.length) {
+    errors += (typedChars.length - origChars.length);
   }
 
-  const totalTypedCount = typedWords.length;
-  const totalCharsWithoutSpaces = cleanTyped.replace(/\s+/g, '').length;
-  const standardWords = totalCharsWithoutSpaces / 5;
-
-  const accuracy = totalTypedCount > 0 ? parseFloat(((correctWords / totalTypedCount) * 100).toFixed(1)) : 0;
-  const errorPercent = totalTypedCount > 0 ? parseFloat(((errors / totalTypedCount) * 100).toFixed(1)) : 0;
+  const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
+  const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
   
+  // ৩. গ্রস ও নেট ডব্লিউপিএম হিসাব
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin))) : 0;
   
-  const isPassed = errorPercent <= 10.0 && netWpm >= minPassWpm;
+  // নেট ডব্লিউপিএম = (সঠিক ক্যারেক্টার / ৫) / সময় (মিনিট)
+  const standardCorrectWords = correctChars / 5;
+  const netWpm = durationMin > 0 ? Math.max(0, Math.round(standardCorrectWords / durationMin)) : 0;
+  
+  // ৪. পাসের শর্ত: ভুল ৫% এর কম (< 5.0%) হতে হবে এবং নেট ডব্লিউপিএম ন্যূনতম পাসের সমান বা বেশি হতে হবে।
+  const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
     totalWords: Math.round(standardWords),
-    correctWords,
+    correctWords: Math.round(standardCorrectWords),
     errors,
     accuracy,
     errorPercent,
