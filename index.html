@@ -47,8 +47,8 @@
             <hr><br>
             <form onsubmit="event.preventDefault(); handleLogin();">
                 <div class="form-group">
-                    <label>রোল নম্বর:</label>
-                    <input type="text" id="candidate-id" class="font-eng" required placeholder="উদাহরণ: 1001">
+                    <label>মোবাইল নম্বর:</label>
+                    <input type="text" id="candidate-id" class="font-eng" required placeholder="উদাহরণ: 01711223344">
                 </div>
                 <div class="form-group">
                     <label>পরীক্ষার্থীর নাম:</label>
@@ -62,19 +62,17 @@
             </form>
         </div>
 
-        <!-- ২. নির্দেশনা স্ক্রিন -->
+        <!-- ২. নির্দেশনা স্ক্রিন (ইংরেজি পরীক্ষার আগে) -->
         <div id="instruction-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
-            <h2 class="brand-title">পরীক্ষার সাধারণ নির্দেশাবলী</h2>
-            <div class="brand-subtitle">General Instructions</div>
+            <h2 class="brand-title">ইংরেজি পরীক্ষার নির্দেশাবলী</h2>
+            <div class="brand-subtitle">English Typing Instructions</div>
             <hr><br>
             <div class="instruction-list">
                 <ul>
-                    <li>পরীক্ষাটি দুটি ধাপে অনুষ্ঠিত হবে: প্রথমে <strong>ইংরেজি টাইপিং</strong> এবং পরে <strong>বাংলা টাইপিং</strong>।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই পেজ স্বয়ংক্রিয়ভাবে পরবর্তী ধাপে বা সাবমিট হয়ে যাবে (Auto-submit)।</li>
+                    <li>প্রথমে <strong>ইংরেজি টাইপিং</strong> পরীক্ষা অনুষ্ঠিত হবে।</li>
+                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে এবং এডিট করা যাবে না।</li>
                     <li>কোনো ধরনের <strong>Copy, Paste বা Cut</strong> করার সুযোগ নেই।</li>
-                    <li>ভুল টাইপিংয়ের ক্ষেত্রে ব্রাউজারের কোনো লাল দাগ (Spellcheck) প্রদর্শন করবে না।</li>
                     <li><strong>৫% এর বেশি ভুল</strong> হলে বা নির্দিষ্ট ডব্লিউপিএম (WPM) না থাকলে ফেল হিসেবে গণ্য হবে।</li>
-                    <li>অনুমতি ছাড়া ব্রাউজার ট্যাব পরিবর্তন করা নিষেধ।</li>
                 </ul>
             </div>
             <button onclick="startEnglishStep()" class="btn-action" style="background:#16a34a;">ইংরেজি টাইপ শুরু করুন</button>
@@ -83,33 +81,50 @@
         <!-- ৩. ইংরেজি টাইপিং স্ক্রিন -->
         <div id="eng-card" class="card hidden">
             <div class="exam-header">
-                <div><strong>পরীক্ষার্থী:</strong> <span id="eng-disp-name"></span> (রোল: <span id="eng-disp-id" class="font-eng"></span>)</div>
+                <div><strong>পরীক্ষার্থী:</strong> <span id="eng-disp-name"></span> (মোবাইল: <span id="eng-disp-id" class="font-eng"></span>)</div>
                 <div><strong>ইংরেজি সময় বাকি:</strong> <span id="eng-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
             </div>
             <div id="eng-passage" class="passage-box font-eng"></div>
             <textarea id="eng-typing-area" class="typing-area font-eng" spellcheck="false" autocomplete="off" placeholder="Type here..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
-            <button onclick="finishEnglishStep()" class="btn-action" style="background:#ea580c;">ইংরেজি টাইপ শেষ ও বাংলায় প্রবেশ</button>
+            <button id="btn-to-bn-instruction" onclick="finishEnglishStep()" class="btn-action hidden" style="background:#ea580c;">বাংলায় যান</button>
         </div>
 
-        <!-- ৪. বাংলা টাইপিং স্ক্রিন -->
+        <!-- ৪. বাংলা নির্দেশনা স্ক্রিন (ইংরেজি শেষের পর) -->
+        <div id="bn-instruction-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
+            <h2 class="brand-title">বাংলা পরীক্ষার নির্দেশাবলী</h2>
+            <div class="brand-subtitle">Bangla Typing Instructions</div>
+            <hr><br>
+            <div class="instruction-list">
+                <ul>
+                    <li>ইংরেজি পরীক্ষা সফলভাবে সম্পন্ন হয়েছে। এখন <strong>বাংলা টাইপিং</strong> পরীক্ষা শুরু হবে।</li>
+                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে।</li>
+                </ul>
+            </div>
+            <button onclick="startBanglaStep()" class="btn-action" style="background:#16a34a;">বাংলা শুরু করুন</button>
+        </div>
+
+        <!-- ৫. বাংলা টাইপিং স্ক্রিন -->
         <div id="bn-card" class="card hidden">
             <div class="exam-header">
-                <div><strong>পরীক্ষার্থী:</strong> <span id="bn-disp-name"></span> (রোল: <span id="bn-disp-id" class="font-eng"></span>)</div>
+                <div><strong>পরীক্ষার্থী:</strong> <span id="bn-disp-name"></span> (মোবাইল: <span id="bn-disp-id" class="font-eng"></span>)</div>
                 <div><strong>বাংলা সময় বাকি:</strong> <span id="bn-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
             </div>
             <div id="bn-passage" class="passage-box font-bn"></div>
             <textarea id="bn-typing-area" class="typing-area font-bn" spellcheck="false" autocomplete="off" placeholder="এখানে টাইপ করুন..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
-            <button onclick="submitFinalExam()" class="btn-action" style="background:#16a34a;">চূড়ান্ত জমা দিন</button>
+            <button id="btn-submit-exam" onclick="submitFinalExam()" class="btn-action hidden" style="background:#16a34a;">জমা দিন</button>
         </div>
 
-        <!-- ৫. ধন্যবাদ ও সফলভাবে জমা হওয়ার স্ক্রিন (মার্কশিট লুকানো) -->
+        <!-- ৬. ধন্যবাদ ও সফলভাবে জমা হওয়ার স্ক্রিন -->
         <div id="success-card" class="card hidden" style="max-width: 600px; margin: 80px auto; text-align: center; padding: 40px;">
-            <h2 class="brand-title" style="color: #16a34a; margin-bottom: 15px;">পরীক্ষা সফলভাবে সম্পন্ন হয়েছে!</h2>
+            <h2 class="brand-title" style="color: #16a34a; margin-bottom: 15px;">পরীক্ষা সফলভাবে জমা হয়েছে!</h2>
             <p style="font-size: 20px; color: #334155; line-height: 1.6; margin-bottom: 25px;">
-                ধন্যবাদ! আপনার উত্তরপত্র সফলভাবে জমা দেওয়া হয়েছে। আপনি এখন এই ব্রাউজার ট্যাব বা উইন্ডোটি বন্ধ করতে পারেন।
+                ধন্যবাদ! আপনার উত্তরপত্র সফলভাবে জমা দেওয়া হয়েছে।
             </p>
-            <div style="font-size: 16px; color: #64748b;">
-                রোল নম্বর: <span id="submitted-roll" class="font-eng" style="font-weight: bold;"></span>
+            <div style="font-size: 16px; color: #64748b; margin-bottom: 30px;">
+                মোবাইল নম্বর: <span id="submitted-roll" class="font-eng" style="font-weight: bold;"></span>
+            </div>
+            <div style="text-align: right;">
+                <button onclick="window.location.reload();" class="btn-action" style="width: auto; padding: 10px 25px; background: #2563eb;">হোমে ফিরে যান</button>
             </div>
         </div>
     </div>
@@ -164,11 +179,22 @@
         function startEnglishStep() {
           document.getElementById('instruction-card').classList.add('hidden');
           document.getElementById('eng-card').classList.remove('hidden');
+          document.getElementById('btn-to-bn-instruction').classList.add('hidden');
+          document.getElementById('eng-typing-area').disabled = false;
+          document.getElementById('eng-typing-area').value = "";
+          document.getElementById('eng-typing-area').focus();
+
           engTimeLeft = (parseInt(configData.duration) || 5) * 60;
           updateEngTimerDisplay();
+          
           engTimerInterval = setInterval(() => {
             engTimeLeft--;
-            if (engTimeLeft <= 0) { clearInterval(engTimerInterval); finishEnglishStep(); }
+            if (engTimeLeft <= 0) { 
+              clearInterval(engTimerInterval); 
+              document.getElementById('eng-timer').innerText = "00:00";
+              document.getElementById('eng-typing-area').disabled = true; 
+              document.getElementById('btn-to-bn-instruction').classList.remove('hidden'); 
+            }
             updateEngTimerDisplay();
           }, 1000);
         }
@@ -179,14 +205,29 @@
         }
 
         function finishEnglishStep() {
-          if (engTimerInterval) clearInterval(engTimerInterval);
           document.getElementById('eng-card').classList.add('hidden');
+          document.getElementById('bn-instruction-card').classList.remove('hidden'); 
+        }
+
+        function startBanglaStep() {
+          document.getElementById('bn-instruction-card').classList.add('hidden');
           document.getElementById('bn-card').classList.remove('hidden');
+          document.getElementById('btn-submit-exam').classList.add('hidden');
+          document.getElementById('bn-typing-area').disabled = false;
+          document.getElementById('bn-typing-area').value = "";
+          document.getElementById('bn-typing-area').focus();
+
           bnTimeLeft = (parseInt(configData.duration) || 5) * 60;
           updateBnTimerDisplay();
+
           bnTimerInterval = setInterval(() => {
             bnTimeLeft--;
-            if (bnTimeLeft <= 0) { clearInterval(bnTimerInterval); submitFinalExam(); }
+            if (bnTimeLeft <= 0) { 
+              clearInterval(bnTimerInterval); 
+              document.getElementById('bn-timer').innerText = "00:00";
+              document.getElementById('bn-typing-area').disabled = true; 
+              document.getElementById('btn-submit-exam').classList.remove('hidden'); 
+            }
             updateBnTimerDisplay();
           }, 1000);
         }
@@ -199,7 +240,8 @@
         function trackTypingLive() {
           const engText = document.getElementById('eng-typing-area').value;
           const bnText = document.getElementById('bn-typing-area').value;
-          const step = !document.getElementById('eng-card').classList.contains('hidden') ? 'english' : 'bangla';
+          const step = !document.getElementById('eng-card').classList.contains('hidden') ? 'eng' : 'bn';
+          
           fetch('/api/save-progress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -215,7 +257,13 @@
             const res = await fetch('/api/submit-exam', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ candidateId, candidateName, examCode, engText: document.getElementById('eng-typing-area').value, bnText: document.getElementById('bn-typing-area').value })
+              body: JSON.stringify({ 
+                candidateId, 
+                candidateName, 
+                examCode, 
+                engText: document.getElementById('eng-typing-area').value, 
+                bnText: document.getElementById('bn-typing-area').value 
+              })
             });
             const data = await res.json();
 
@@ -225,7 +273,7 @@
               document.getElementById('success-card').classList.remove('hidden');
               document.getElementById('submitted-roll').innerText = candidateId;
             } else {
-              alert(data.message || "সাবমিট করতে সমস্যা হয়েছে।");
+              alert(data.message || "সাবমিট করতে সমস্যা হয়েছে।");
             }
           } catch (err) { 
             alert("সার্ভার ত্রুটি!"); 
