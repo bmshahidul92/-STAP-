@@ -1,10 +1,11 @@
 {
   "config": {
-    "examCode": "BCC2026",
+    "examCode": "ECS2026",
+    "mobileNumber": "01613555882",
     "engPassage": "The quick brown fox jumps over the lazy dog. Fast typing requires practice and precision.",
     "bnPassage": "আমাদের বাংলাদেশের প্রাকৃতিক সৌন্দর্য অপরূপ। বাংলা ভাষায় সঠিক ও দ্রুত টাইপিং জানা অত্যন্ত প্রয়োজনীয়।",
-    "engDuration": 5,
-    "bnDuration": 5,
+    "engDuration": 1,
+    "bnDuration": 1,
     "maxErrorRate": 5,
     "adminPassword": "admin",
     "securityQuestion": "আপনার প্রিয় রঙ কোনটি?",
