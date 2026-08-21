@@ -156,7 +156,8 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 /**
- * মাইক্রোসফট ওয়ার্ডের সাথে ১০০% মিল রেখে Intl.Segmenter ব্যবহার করে গ্রাফিম-ভিত্তিক নির্ভুল মেট্রিকস ক্যালকুলেশন
+ * মাইক্রোসফট ওয়ার্ডের 'Characters (no spaces)' নিয়মে হুবহু মেলানোর জন্য ক্যালকুলেশন
+ * (স্পেস বাদে বিরামচিহ্ন সহ সব ক্যারেক্টার গোনা হবে)
  */
 function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
   const origText = original || "";
@@ -175,6 +176,7 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
+  // স্পেস দিয়ে শব্দগুলোকে আলাদা করা হচ্ছে (এমএস ওয়ার্ড এভাবেই কাজ করে)
   let origWords = origText.trim().split(/\s+/);
   let typedWords = typeText.trim().split(/\s+/);
 
@@ -182,17 +184,15 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
   let correctChars = 0;
   let errors = 0;
 
-  // মাইক্রোসফট ওয়ার্ডের মতো সঠিক গ্রাফিম কাউন্টের জন্য লোকাল সেন্সর ব্যবহার করা হলো
-  const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   const maxWords = Math.max(origWords.length, typedWords.length);
 
   for (let w = 0; w < maxWords; w++) {
     const oWord = origWords[w] || "";
     const tWord = typedWords[w] || "";
 
-    // স্পেস বাদে প্রতিটি দৃশ্যমান বর্ণ ও বিরামচিহ্ন আলাদা করা
-    let oChars = Array.from(segmenter.segment(oWord), x => x.segment).filter(c => c.trim() !== '');
-    let tChars = Array.from(segmenter.segment(tWord), x => x.segment).filter(c => c.trim() !== '');
+    // Array.from() ব্যবহার করা হয়েছে যা বাংলা ও ইংরেজির প্রতিটি ক্যারেক্টার এবং বিরামচিহ্ন হুবহু আলাদা করবে
+    let oChars = Array.from(oWord);
+    let tChars = Array.from(tWord);
 
     totalTypedChars += tChars.length;
 
@@ -216,6 +216,7 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     }
   }
 
+  // স্পেসগুলোকে হিসাবের বাইরে রাখা হয়েছে (মাইক্রোসফট ওয়ার্ডের no spaces নিয়মের সাথে মেলানোর জন্য)
   const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
   const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
@@ -435,7 +436,7 @@ app.post('/api/admin/delete-result', (req, res) => {
   }
 });
 
-app.post('/api/admin/reset-all-results',, (req, res) => {
+app.post('/api/admin/reset-all-results', (req, res) => {
   const { password } = req.body;
 
   if (password !== db.config.adminPassword) {
