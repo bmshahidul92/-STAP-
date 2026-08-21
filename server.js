@@ -10,7 +10,6 @@ const io = new Server(server);
 
 app.use(express.json());
 
-// স্ট্যাটিক ফাইল এবং রুট ডিরেক্টরি সঠিকভাবে সেট করা
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -28,14 +27,12 @@ let db = {
     securityQuestion: "আপনার প্রিয় রঙ কোনটি?",
     securityAnswer: "blue"
   },
-  // mobileSettings format: { "01711223344": { expiryTime: "2026-12-31T23:59", isBlocked: false, allowedExamCodes: ["BCC2026"] } }
   mobileSettings: {}, 
   completedMobiles: {}, 
   results: [],
   activeSessions: {}
 };
 
-// পার্মানেন্ট ডাটা লোড করার নিরাপদ ফাংশন
 function loadData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -44,19 +41,13 @@ function loadData() {
         const parsedData = JSON.parse(fileData);
         db = { ...db, ...parsedData };
         
-        // অ্যাডমিন পাসওয়ার্ড ও কনফিগ সুরক্ষিত রাখা
         if (!db.config) db.config = {};
         db.config.adminPassword = "632750";
         if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
         if (!db.config.securityAnswer) db.config.securityAnswer = "blue";
         
-        // পুরানো rollSettings বা completedRolls থাকলে সেগুলোকে মোবাইল সেটিংসে কনভার্ট বা ব্যাকআপ রাখা
-        if (!db.mobileSettings) {
-          db.mobileSettings = db.rollSettings || {};
-        }
-        if (!db.completedMobiles) {
-          db.completedMobiles = db.completedRolls || {};
-        }
+        if (!db.mobileSettings) db.mobileSettings = db.rollSettings || {};
+        if (!db.completedMobiles) db.completedMobiles = db.completedRolls || {};
         if (!db.results) db.results = [];
         if (!db.activeSessions) db.activeSessions = {};
       }
@@ -68,7 +59,6 @@ function loadData() {
   }
 }
 
-// পার্মানেন্ট ডাটা সেভ করার ফাংশন
 function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
@@ -77,7 +67,6 @@ function saveData() {
   }
 }
 
-// সার্ভার চালুর শুরুতেই ডাটা লোড
 loadData();
 
 app.get('/', (req, res) => {
@@ -93,29 +82,23 @@ app.get('/api/exam-config', (req, res) => {
   });
 });
 
-// পরীক্ষার্থী ভ্যালিডেশন: মোবাইল নম্বর, পরীক্ষা কোড, ব্লক ও মেয়াদ চেক
 app.post('/api/validate-candidate', (req, res) => {
-  const { candidateId, examCode } = req.body; // এখানে candidateId হলো মোবাইল নম্বর
-  
+  const { candidateId, examCode } = req.body; 
   const mobileInfo = db.mobileSettings[candidateId];
 
-  // ১. মোবাইল নম্বর রেজিস্টার্ড আছে কিনা চেক
   if (!mobileInfo) {
     return res.json({ success: false, message: "এই মোবাইল নম্বরটি সিস্টেমে নিবন্ধিত নয়।" });
   }
 
-  // ২. নির্দিষ্ট পরীক্ষার জন্য কোড অনুমোদিত কিনা চেক
   const allowedCodes = mobileInfo.allowedExamCodes || [db.config.examCode];
   if (!allowedCodes.includes(examCode)) {
     return res.json({ success: false, message: "এই মোবাইল নম্বরের জন্য এই পরীক্ষা কোডটি অনুমোদিত নয়।" });
   }
 
-  // ৩. ব্লক করা আছে কিনা চেক
   if (mobileInfo.isBlocked) {
-    return res.json({ success: false, message: "এই মোবাইল নম্বরটি বর্তমানে ব্লক করা রয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+    return res.json({ success: false, message: "এই মোবাইল নম্বরটি বর্তমানে ব্লক করা রয়েছে।" });
   }
 
-  // ৪. মেয়াদ উত্তীর্ণ (Expiry Time) চেক
   if (mobileInfo.expiryTime) {
     const now = new Date();
     const expiry = new Date(mobileInfo.expiryTime);
@@ -124,7 +107,6 @@ app.post('/api/validate-candidate', (req, res) => {
     }
   }
 
-  // ৫. ইতিমধ্যে পরীক্ষা সম্পন্ন করেছে কিনা চেক
   const recordKey = `${examCode}_${candidateId}`;
   const isCompleted = db.completedMobiles && db.completedMobiles[recordKey];
 
@@ -164,12 +146,14 @@ app.post('/api/save-progress', (req, res) => {
   res.json({ success: true });
 });
 
-// নির্ভুল টাইপিং মেট্রিকস (Gross WPM, Net WPM, Accuracy, Errors) ক্যালকুলেশন
-function calculateMetrics(original, typed, durationMin, minPassWpm) {
-  const cleanOriginal = (original || "").trim();
-  const cleanTyped = (typed || "").trim();
+/**
+ * মাইক্রোসফট ওয়ার্ডের স্টাইলে স্ট্রোক বা ক্যারেক্টার এবং ভুল গণনার নিখুঁত লজিক (বাংলা ও ইংরেজি উভয় ক্ষেত্রে সমান)
+ */
+function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
+  const origText = original || "";
+  const typeText = typed || "";
 
-  if (cleanTyped === "") {
+  if (typeText.trim() === "") {
     return {
       totalWords: 0,
       correctWords: 0,
@@ -182,43 +166,52 @@ function calculateMetrics(original, typed, durationMin, minPassWpm) {
     };
   }
 
-  const origWords = cleanOriginal.split(/\s+/);
-  const typedWords = cleanTyped.split(/\s+/).filter(w => w.length > 0);
+  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে স্পেস ও অক্ষর সহ নিখুঁত স্ট্রোক আলাদা করা
+  const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   
-  let correctWords = 0;
-  let errors = 0;
+  const origChars = Array.from(segmenter.segment(origText), x => x.segment);
+  const typedChars = Array.from(segmenter.segment(typeText), x => x.segment);
 
-  // শব্দ ধরে নিখুঁত তুলনা
-  typedWords.forEach((word, index) => {
-    if (origWords[index] === word) {
-      correctWords++;
+  const totalTypedChars = typedChars.length; // মোট স্ট্রোক বা ক্যারেক্টার
+  let correctChars = 0; // সঠিক স্ট্রোক
+  let errors = 0;       // ভুল স্ট্রোক
+
+  const maxLength = Math.max(origChars.length, typedChars.length);
+
+  for (let i = 0; i < maxLength; i++) {
+    const oChar = origChars[i];
+    const tChar = typedChars[i];
+
+    if (tChar === undefined) {
+      // কম টাইপ করা হলে তা ভুল বা মিসিং স্ট্রোক হিসেবে গণ্য হবে
+      errors++;
+    } else if (oChar === undefined) {
+      // বেশি বা অতিরিক্ত টাইপ করা হলে (যেমন আন্তর্জাতিক শব্দে অতিরিক্ত অক্ষর) তা ভুল স্ট্রোক হিসেবে গণ্য হবে
+      errors++;
+    } else if (oChar === tChar) {
+      correctChars++;
     } else {
       errors++;
     }
-  });
-
-  if (typedWords.length > origWords.length) {
-    errors += (typedWords.length - origWords.length);
   }
 
-  const totalTypedCount = typedWords.length;
-  const totalCharsWithoutSpaces = cleanTyped.replace(/\s+/g, '').length;
-  const standardWords = totalCharsWithoutSpaces / 5;
-
-  const accuracy = totalTypedCount > 0 ? parseFloat(((correctWords / totalTypedCount) * 100).toFixed(1)) : 0;
-  const errorPercent = totalTypedCount > 0 ? parseFloat(((errors / totalTypedCount) * 100).toFixed(1)) : 0;
+  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ হিসেবে WPM নির্ণয়ের জন্য)
+  const standardWords = totalTypedChars / 5; 
+  const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
+  const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
   
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  const netWpm = durationMin > 0 ? Math.max(0, Math.round((correctWords / durationMin))) : 0;
+  const standardCorrectWords = correctChars / 5;
+  const netWpm = durationMin > 0 ? Math.max(0, Math.round(standardCorrectWords / durationMin)) : 0;
   
-  const isPassed = errorPercent <= 10.0 && netWpm >= minPassWpm;
+  const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
-    totalWords: Math.round(standardWords),
-    correctWords,
-    errors,
-    accuracy,
-    errorPercent,
+    totalWords: totalTypedChars,      // মোট স্ট্রোক (যেমনটি আপনি চেয়েছিলেন)
+    correctWords: correctChars,      // সঠিক স্ট্রোক
+    errors: errors,                  // ভুল স্ট্রোক (মাইক্রোসফট ওয়ার্ডের নিয়মে নিখুঁত হিসাব)
+    accuracy: accuracy,              // স্ট্রোক হিসেবে সঠিকতার শতকরা হার (%)
+    errorPercent: errorPercent,      // স্ট্রোক হিসেবে ভুলের শতকরা হার (%)
     grossWpm,
     netWpm,
     passed: isPassed
@@ -229,24 +222,18 @@ app.post('/api/submit-exam', (req, res) => {
   const { candidateId, candidateName, examCode, engText, bnText } = req.body;
   const currentExamCode = examCode || db.config.examCode;
 
-  const engRes = calculateMetrics(db.config.engPassage, engText || '', db.config.duration, db.config.engMinPassWpm);
-  const bnRes = calculateMetrics(db.config.bnPassage, bnText || '', db.config.duration, db.config.bnMinPassWpm);
+  const engRes = calculateMetrics(db.config.engPassage, engText || '', db.config.duration, db.config.engMinPassWpm, false);
+  const bnRes = calculateMetrics(db.config.bnPassage, bnText || '', db.config.duration, db.config.bnMinPassWpm, true);
 
-  // সঠিক জমার তারিখ ও সময় (বাংলাদেশ ফরম্যাট)
   const now = new Date();
   const submissionTime = now.toLocaleString('bn-BD', { 
     timeZone: 'Asia/Dhaka', 
-    year: 'numeric', 
-    month: 'numeric', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit', 
-    hour12: true 
+    year: 'numeric', month: 'numeric', day: 'numeric', 
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
   });
 
   const finalResult = {
-    candidateId, // মোবাইল নম্বর
+    candidateId, 
     candidateName,
     examCode: currentExamCode,
     submittedAt: submissionTime,
@@ -277,7 +264,7 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/full-config', (req, res) => {
   res.json({
     ...db.config,
-    rollSettings: db.mobileSettings || {} // ফ্রন্টএন্ডের সুবিধার জন্য রোল সেটিংস প্রপার্টিতে মোবাইল সেটিংস পাঠানো হলো
+    rollSettings: db.mobileSettings || {} 
   });
 });
 
@@ -296,7 +283,7 @@ app.post('/api/admin/update-config', (req, res) => {
   }
 
   if (examCode) db.config.examCode = examCode;
-  if (engPassage !== undefined) db.config.engPassage = engPassage;
+  if (engPassage !== undefined) db.config.examPassage = engPassage;
   if (bnPassage !== undefined) db.config.bnPassage = bnPassage;
   if (duration) db.config.duration = parseInt(duration);
   if (engMinPassWpm) db.config.engMinPassWpm = parseInt(engMinPassWpm);
@@ -304,7 +291,7 @@ app.post('/api/admin/update-config', (req, res) => {
 
   if (rollUpdates && Array.isArray(rollUpdates)) {
     rollUpdates.forEach(item => {
-      const { roll, expiryTime, isBlocked, allowedExamCodes } = item; // এখানে roll মানে মোবাইল নম্বর
+      const { roll, expiryTime, isBlocked, allowedExamCodes } = item; 
       if (roll) {
         if (!db.mobileSettings[roll]) {
           db.mobileSettings[roll] = { expiryTime: "", isBlocked: false, allowedExamCodes: [db.config.examCode] };
@@ -334,7 +321,7 @@ app.post('/api/admin/update-config', (req, res) => {
   if (newSecAns && newSecAns.trim() !== "") db.config.securityAnswer = newSecAns.trim();
 
   saveData();
-  res.json({ success: true, message: "সেটিংস ও মোবাইল নম্বর ম্যানেজমেন্ট সফলভাবে আপডেট হয়েছে!" });
+  res.json({ success: true, message: "সেটিংস সফলভাবে আপডেট হয়েছে!" });
 });
 
 app.post('/api/admin/delete-roll', (req, res) => {
@@ -366,9 +353,9 @@ app.post('/api/admin/reset-session', (req, res) => {
 
   if (cleared) {
     saveData();
-    res.json({ success: true, message: `মোবাইল নম্বর ${candidateId}-কে পুনরায় টাইপ করার অনুমতি দেওয়া হয়েছে।` });
+    res.json({ success: true, message: `মোবাইল নম্বর ${candidateId}-কে পুনরায় পরীক্ষার অনুমতি দেওয়া হয়েছে।` });
   } else {
-    res.json({ success: false, message: "এই নম্বরের কোনো সক্রিয় বা সম্পন্ন রেকর্ড পাওয়া যায়নি।" });
+    res.json({ success: false, message: "কোনো সক্রিয় রেকর্ড পাওয়া যায়নি।" });
   }
 });
 
@@ -389,7 +376,6 @@ app.post('/api/admin/recover-password', (req, res) => {
   }
 });
 
-// রেজাল্ট ফিল্টার ও ফেচ করার রুট
 app.get('/api/results', (req, res) => {
   let filteredResults = db.results;
   const { examCodes, rolls } = req.query;
@@ -407,24 +393,16 @@ app.get('/api/results', (req, res) => {
   res.json(filteredResults);
 });
 
-app.delete('/api/results/:index', (req, res) => {
-  const idx = parseInt(req.params.index);
-  if (idx >= 0 && idx < db.results.length) {
-    db.results.splice(idx, 1);
-    saveData();
+app.post('/api/admin/reset-all-results', (req, res) => {
+  const { password } = req.body;
+  if (password !== db.config.adminPassword) {
+    return res.json({ success: false, message: "ভুল এডমিন পাসওয়ার্ড!" });
   }
-  res.json({ success: true });
-});
-
-app.delete('/api/results', (req, res) => {
   db.results = [];
   db.completedMobiles = {};
+  db.activeSessions = {};
   saveData();
-  res.json({ success: true });
-});
-
-app.get('/api/admin/active-sessions', (req, res) => {
-  res.json(db.activeSessions);
+  res.json({ success: true, message: "সমস্ত ফলাফল সফলভাবে মুছে ফেলা হয়েছে!" });
 });
 
 const PORT = process.env.PORT || 3000;
