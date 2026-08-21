@@ -1,5 +1,5 @@
 const express = require('express');
-const http = http = require('http');
+const http = require('http');
 const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
@@ -182,6 +182,7 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
   let correctChars = 0;
   let errors = 0;
 
+  // মাইক্রোসফট ওয়ার্ডের মতো সঠিক গ্রাফিম কাউন্টের জন্য লোকাল সেন্সর ব্যবহার করা হলো
   const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   const maxWords = Math.max(origWords.length, typedWords.length);
 
@@ -189,6 +190,7 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     const oWord = origWords[w] || "";
     const tWord = typedWords[w] || "";
 
+    // স্পেস বাদে প্রতিটি দৃশ্যমান বর্ণ ও বিরামচিহ্ন আলাদা করা
     let oChars = Array.from(segmenter.segment(oWord), x => x.segment).filter(c => c.trim() !== '');
     let tChars = Array.from(segmenter.segment(tWord), x => x.segment).filter(c => c.trim() !== '');
 
@@ -433,7 +435,7 @@ app.post('/api/admin/delete-result', (req, res) => {
   }
 });
 
-app.post('/api/admin/reset-all-results', (req, res) => {
+app.post('/api/admin/reset-all-results',, (req, res) => {
   const { password } = req.body;
 
   if (password !== db.config.adminPassword) {
