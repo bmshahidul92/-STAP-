@@ -179,20 +179,17 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
   // মাইক্রোসফট ওয়ার্ডের পজিশন-বাই-পজিশন নিখুঁত তুলনা (Character-by-Character Comparison)
   const maxLength = Math.max(origChars.length, typedChars.length);
 
-  for (let i = 0; i < maxLength; i++) {
+  // শুধুমাত্র টাইপকৃত টেক্সটের দৈর্ঘ্যের ওপর ভিত্তি করে লুপ চলবে
+  const typeLength = typedChars.length;
+  for (let i = 0; i < typeLength; i++) {
     const oChar = origChars[i];
     const tChar = typedChars[i];
 
-    if (tChar === undefined) {
-      // মূল প্যাসেজের চেয়ে কম টাইপ করলে বাকিগুলো মিসিং বা ভুল হিসেবে কাউন্ট হবে
+    // মূল প্যাসেজে অক্ষর না থাকলে বা টাইপ করা অক্ষর ভুল হলে ভুল হিসেবে গণ্য হবে
+    if (oChar === undefined || oChar !== tChar) {
       errors++;
-    } else if (oChar === undefined) {
-      // মূল প্যাসেজের চেয়ে অতিরিক্ত টাইপ করলে তাও ভুল হিসেবে কাউন্ট হবে
-      errors++;
-    } else if (oChar === tChar) {
-      correctChars++;
     } else {
-      errors++;
+      correctChars++;
     }
   }
 
