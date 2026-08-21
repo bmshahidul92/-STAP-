@@ -1,16 +1,19 @@
-let candidateData = { candidateId: '', candidateName: '' };
+let candidateData = { candidateId: '', candidateName: '', examCode: '' };
 let examConfig = {};
 let engTimerInterval = null;
 let bnTimerInterval = null;
 let engTimeLeft = 0;
 let bnTimeLeft = 0;
 
-// ট্যাব সুইচ অ্যান্টি-চিটিং ওয়ার্নিং
+// Socket.io কানেকশন ইনিশিয়ালাইজেশন
+const socket = io();
+
+// ট্যাব সুইচ অ্যান্টি-চিটিং ওয়ার্নিং
 document.addEventListener("visibilitychange", function() {
     if (document.hidden) {
         if (!document.getElementById('eng-card').classList.contains('hidden') || 
             !document.getElementById('bn-card').classList.contains('hidden')) {
-            alert("সতর্কবার্তা: পরীক্ষা চলাকালীন অন্য ট্যাব বা উইন্ডোতে যাওয়া নিষিদ্ধ!");
+            alert("সতর্কবার্তা: পরীক্ষা চলাকালীন অন্য ট্যাব বা উইন্ডোতে যাওয়া নিষিদ্ধ!");
         }
     }
 });
@@ -38,11 +41,11 @@ async function handleLogin() {
         return alert(valData.message);
     }
 
-    candidateData = { candidateId, candidateName };
+    candidateData = { candidateId, candidateName, examCode };
 
-    // যদি আগের কোনো সংরক্ষিত সেশন পাওয়া যায় (Server Resume)
+    // যদি আগের কোনো সংরক্ষিত সেশন পাওয়া যায় (Server Resume)
     if (valData.hasSavedSession && valData.sessionData) {
-        if (confirm("আপনার পূর্বের অসমাপ্ত পরীক্ষা সার্ভারে পাওয়া গেছে। আপনি কি সেখান থেকেই শুরু করতে চান?")) {
+        if (confirm("আপনার পূর্বের অসমাপ্ত পরীক্ষা সার্ভারে পাওয়া গেছে। আপনি কি সেখান থেকেই শুরু করতে চান?")) {
             restoreSavedSession(valData.sessionData);
             return;
         }
@@ -55,30 +58,55 @@ async function handleLogin() {
 function restoreSavedSession(session) {
     document.getElementById('login-card').classList.add('hidden');
     if (session.step === 'eng') {
-        startEnglishStep(session.engTimeLeft || (examConfig.engDuration * 60), session.engText || '');
+        startEnglishStep(session.engTimeLeft || (examConfig.duration * 60), session.engText || '');
     } else if (session.step === 'bn') {
         document.getElementById('eng-typing-area').value = session.engText || '';
-        startBanglaStep(session.bnTimeLeft || (examConfig.bnDuration * 60), session.bnText || '');
+        startBanglaStep(session.bnTimeLeft || (examConfig.duration * 60), session.bnText || '');
     }
 }
 
-function autoSaveProgress(step) {
-    const engText = document.getElementById('eng-typing-area').value;
-    const bnText = document.getElementById('bn-typing-area').value;
-
+function autoSaveProgress(step, text, wpm, accuracy) {
     fetch('/api/save-progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             candidateId: candidateData.candidateId,
             candidateName: candidateData.candidateName,
+            examCode: candidateData.examCode,
             step,
-            engText,
-            bnText,
+            engText: step === 'eng' ? text : document.getElementById('eng-typing-area').value,
+            bnText: step === 'bn' ? text : document.getElementById('bn-typing-area').value,
             engTimeLeft,
             bnTimeLeft
         })
     });
+
+    // লাইভ লিডারবোর্ডের জন্য Socket ডেটা পাঠানো
+    socket.emit('live_progress', {
+        candidateId: candidateData.candidateId,
+        candidateName: candidateData.candidateName,
+        step,
+        currentWpm: wpm || 0,
+        currentAccuracy: accuracy || 100
+    });
+}
+
+// রিয়েল-টাইম স্ট্যাটস ক্যালকুলেটর (WPM ও Accuracy বের করার জন্য)
+function calculateLiveStats(typedText, originalText, timeElapsedMinutes) {
+    if (timeElapsedMinutes <= 0 || !typedText) return { wpm: 0, accuracy: 100 };
+    
+    const typedWords = typedText.trim().split(/\s+/).filter(Boolean);
+    const totalWords = typedWords.length;
+    const grossWpm = Math.round(totalWords / timeElapsedMinutes);
+
+    // সহজ সঠিকতা যাচাই
+    let correctChars = 0;
+    for (let i = 0; i < typedText.length; i++) {
+        if (originalText[i] === typedText[i]) correctChars++;
+    }
+    const accuracy = typedText.length > 0 ? Math.round((correctChars / typedText.length) * 100) : 100;
+    
+    return { wpm: grossWpm, accuracy: Math.max(0, accuracy) };
 }
 
 function startEnglishStep(savedTime, savedText) {
@@ -93,7 +121,14 @@ function startEnglishStep(savedTime, savedText) {
     if (savedText) textarea.value = savedText;
     textarea.focus();
 
-    engTimeLeft = savedTime !== undefined ? savedTime : examConfig.engDuration * 60;
+    const totalDurationSec = examConfig.duration * 60;
+    engTimeLeft = savedTime !== undefined ? savedTime : totalDurationSec;
+
+    textarea.addEventListener('input', () => {
+        const elapsedTimeMin = (totalDurationSec - engTimeLeft) / 60 || 0.1;
+        const stats = calculateLiveStats(textarea.value, examConfig.engPassage, elapsedTimeMin);
+        autoSaveProgress('eng', textarea.value, stats.wpm, stats.accuracy);
+    });
 
     engTimerInterval = setInterval(() => {
         engTimeLeft--;
@@ -101,11 +136,9 @@ function startEnglishStep(savedTime, savedText) {
         const s = (engTimeLeft % 60).toString().padStart(2, '0');
         document.getElementById('eng-timer').innerText = `${m}:${s}`;
 
-        if (engTimeLeft % 5 === 0) autoSaveProgress('eng'); // প্রতি ৫ সেকেন্ডে অটোসেভ
-
         if (engTimeLeft <= 0) {
             clearInterval(engTimerInterval);
-            alert("ইংরেজি টাইপিংয়ের সময় শেষ!");
+            alert("ইংরেজি টাইপিংয়ের সময় শেষ!");
             finishEnglishStep();
         }
     }, 1000);
@@ -128,7 +161,14 @@ function startBanglaStep(savedTime, savedText) {
     if (savedText) textarea.value = savedText;
     textarea.focus();
 
-    bnTimeLeft = savedTime !== undefined ? savedTime : examConfig.bnDuration * 60;
+    const totalDurationSec = examConfig.duration * 60;
+    bnTimeLeft = savedTime !== undefined ? savedTime : totalDurationSec;
+
+    textarea.addEventListener('input', () => {
+        const elapsedTimeMin = (totalDurationSec - bnTimeLeft) / 60 || 0.1;
+        const stats = calculateLiveStats(textarea.value, examConfig.bnPassage, elapsedTimeMin);
+        autoSaveProgress('bn', textarea.value, stats.wpm, stats.accuracy);
+    });
 
     bnTimerInterval = setInterval(() => {
         bnTimeLeft--;
@@ -136,11 +176,9 @@ function startBanglaStep(savedTime, savedText) {
         const s = (bnTimeLeft % 60).toString().padStart(2, '0');
         document.getElementById('bn-timer').innerText = `${m}:${s}`;
 
-        if (bnTimeLeft % 5 === 0) autoSaveProgress('bn');
-
         if (bnTimeLeft <= 0) {
             clearInterval(bnTimerInterval);
-            alert("বাংলা টাইপিংয়ের সময় শেষ!");
+            alert("বাংলা টাইপিংয়ের সময় শেষ!");
             submitFinalExam();
         }
     }, 1000);
@@ -158,6 +196,7 @@ async function submitFinalExam() {
         body: JSON.stringify({
             candidateId: candidateData.candidateId,
             candidateName: candidateData.candidateName,
+            examCode: candidateData.examCode,
             engText,
             bnText
         })
@@ -167,5 +206,7 @@ async function submitFinalExam() {
     if (data.success) {
         document.getElementById('bn-card').classList.add('hidden');
         document.getElementById('success-card').classList.remove('hidden');
+    } else {
+        alert(data.message || "জমা দিতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     }
 }
