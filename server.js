@@ -166,12 +166,12 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে ক্যারেক্টার ও স্পেস সহ স্ট্রোক আলাদা করা
+  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে ক্যারেক্টার ও স্পেস বাদে স্ট্রোক আলাদা করা
   const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   
-  const origChars = Array.from(segmenter.segment(origText), x => x.segment);
-  const typedChars = Array.from(segmenter.segment(typeText), x => x.segment);
-
+  const origChars = Array.from(segmenter.segment(origText), x => x.segment).filter(c => c.trim() !== "");
+  const typedChars = Array.from(segmenter.segment(typeText), x => x.segment).filter(c => c.trim() !== "");
+  
   const totalTypedChars = typedChars.length; // মোট টাইপকৃত স্ট্রোক বা ক্যারেক্টার
   let correctChars = 0; 
   let errors = 0;
