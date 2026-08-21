@@ -35,6 +35,10 @@
       .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 18px; }
       .form-group input { width: 100%; padding: 10px; font-size: 18px; border: 1px solid #ccc; border-radius: 5px; }
       .instruction-list { font-size: 18px; line-height: 1.8; margin-bottom: 20px; color: #334155; }
+      
+      /* নতুন রেজাল্ট টেবিল স্টাইল */
+      .result-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      .result-table th, .result-table td { border: 1px solid #cbd5e1; padding: 10px; text-align: center; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -62,222 +66,116 @@
             </form>
         </div>
 
-        <!-- ২. নির্দেশনা স্ক্রিন (ইংরেজি পরীক্ষার আগে) -->
+        <!-- ২. নির্দেশনা স্ক্রিন -->
         <div id="instruction-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
-            <h2 class="brand-title">ইংরেজি পরীক্ষার নির্দেশাবলী</h2>
-            <div class="brand-subtitle">English Typing Instructions</div>
-            <hr><br>
+            <h2 class="brand-title">নির্দেশাবলী</h2>
             <div class="instruction-list">
                 <ul>
-                    <li>প্রথমে <strong>ইংরেজি টাইপিং</strong> পরীক্ষা অনুষ্ঠিত হবে।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে এবং এডিট করা যাবে না।</li>
-                    <li>কোনো ধরনের <strong>Copy, Paste বা Cut</strong> করার সুযোগ নেই।</li>
-                    <li><strong>৫% এর বেশি ভুল</strong> হলে বা নির্দিষ্ট ডব্লিউপিএম (WPM) না থাকলে ফেল হিসেবে গণ্য হবে।</li>
+                    <li>প্রথমে ইংরেজি ও পরে বাংলা টাইপিং পরীক্ষা হবে।</li>
+                    <li>নির্ধারিত সময়ের মধ্যে সম্পন্ন করতে হবে।</li>
                 </ul>
             </div>
             <button onclick="startEnglishStep()" class="btn-action" style="background:#16a34a;">ইংরেজি টাইপ শুরু করুন</button>
         </div>
 
-        <!-- ৩. ইংরেজি টাইপিং স্ক্রিন -->
-        <div id="eng-card" class="card hidden">
+        <!-- ৩. ইংরেজি ও বাংলা টাইপিং স্ক্রিন (একই লজিক) -->
+        <div id="exam-card" class="card hidden">
             <div class="exam-header">
-                <div><strong>পরীক্ষার্থী:</strong> <span id="eng-disp-name"></span> (মোবাইল: <span id="eng-disp-id" class="font-eng"></span>)</div>
-                <div><strong>ইংরেজি সময় বাকি:</strong> <span id="eng-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
+                <div><strong id="lang-title">ইংরেজি</strong> পরীক্ষা</div>
+                <div><strong>সময় বাকি:</strong> <span id="timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
             </div>
-            <div id="eng-passage" class="passage-box font-eng"></div>
-            <textarea id="eng-typing-area" class="typing-area font-eng" spellcheck="false" autocomplete="off" placeholder="Type here..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
-            <button id="btn-to-bn-instruction" onclick="finishEnglishStep()" class="btn-action hidden" style="background:#ea580c;">বাংলায় যান</button>
+            <div id="passage-box" class="passage-box"></div>
+            <textarea id="typing-area" class="typing-area" spellcheck="false" autocomplete="off" placeholder="এখানে টাইপ করুন..."></textarea>
+            <button id="btn-next" onclick="handleNextStep()" class="btn-action hidden">পরবর্তী ধাপ</button>
         </div>
 
-        <!-- ৪. বাংলা নির্দেশনা স্ক্রিন (ইংরেজি শেষের পর) -->
-        <div id="bn-instruction-card" class="card hidden" style="max-width: 800px; margin: 40px auto;">
-            <h2 class="brand-title">বাংলা পরীক্ষার নির্দেশাবলী</h2>
-            <div class="brand-subtitle">Bangla Typing Instructions</div>
-            <hr><br>
-            <div class="instruction-list">
-                <ul>
-                    <li>ইংরেজি পরীক্ষা সফলভাবে সম্পন্ন হয়েছে। এখন <strong>বাংলা টাইপিং</strong> পরীক্ষা শুরু হবে।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে।</li>
-                </ul>
-            </div>
-            <button onclick="startBanglaStep()" class="btn-action" style="background:#16a34a;">বাংলা শুরু করুন</button>
-        </div>
-
-        <!-- ৫. বাংলা টাইপিং স্ক্রিন -->
-        <div id="bn-card" class="card hidden">
-            <div class="exam-header">
-                <div><strong>পরীক্ষার্থী:</strong> <span id="bn-disp-name"></span> (মোবাইল: <span id="bn-disp-id" class="font-eng"></span>)</div>
-                <div><strong>বাংলা সময় বাকি:</strong> <span id="bn-timer" class="font-eng" style="color:#dc2626;">05:00</span></div>
-            </div>
-            <div id="bn-passage" class="passage-box font-bn"></div>
-            <textarea id="bn-typing-area" class="typing-area font-bn" spellcheck="false" autocomplete="off" placeholder="এখানে টাইপ করুন..." oninput="trackTypingLive()" oncopy="return false" onpaste="return false" oncut="return false"></textarea>
-            <button id="btn-submit-exam" onclick="submitFinalExam()" class="btn-action hidden" style="background:#16a34a;">জমা দিন</button>
-        </div>
-
-        <!-- ৬. ধন্যবাদ ও সফলভাবে জমা হওয়ার স্ক্রিন -->
-        <div id="success-card" class="card hidden" style="max-width: 600px; margin: 80px auto; text-align: center; padding: 40px;">
-            <h2 class="brand-title" style="color: #16a34a; margin-bottom: 15px;">পরীক্ষা সফলভাবে জমা হয়েছে!</h2>
-            <p style="font-size: 20px; color: #334155; line-height: 1.6; margin-bottom: 25px;">
-                ধন্যবাদ! আপনার উত্তরপত্র সফলভাবে জমা দেওয়া হয়েছে।
-            </p>
-            <div style="font-size: 16px; color: #64748b; margin-bottom: 30px;">
-                মোবাইল নম্বর: <span id="submitted-roll" class="font-eng" style="font-weight: bold;"></span>
-            </div>
-            <div style="text-align: right;">
-                <button onclick="window.location.reload();" class="btn-action" style="width: auto; padding: 10px 25px; background: #2563eb;">হোমে ফিরে যান</button>
-            </div>
+        <!-- ৪. ফলাফল প্রদর্শন (জমার পর) -->
+        <div id="success-card" class="card hidden" style="max-width: 800px; margin: 80px auto;">
+            <h2 class="brand-title" style="color: #16a34a;">পরীক্ষা সফলভাবে জমা হয়েছে!</h2>
+            <div id="result-summary"></div>
+            <button onclick="window.location.reload();" class="btn-action">হোমে ফিরে যান</button>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let candidateId = "", candidateName = "", examCode = "", configData = {};
-        let engTimerInterval = null, bnTimerInterval = null, engTimeLeft = 0, bnTimeLeft = 0;
+        let candidateId = "", candidateName = "", examCode = "", configData = {}, currentStep = 'eng';
+        let timerInterval = null, timeLeft = 0;
 
         async function handleLogin() {
           candidateId = document.getElementById('candidate-id').value.trim();
           candidateName = document.getElementById('candidate-name').value.trim();
           examCode = document.getElementById('exam-code').value.trim();
 
-          if (!candidateId || !candidateName || !examCode) {
-            alert("দয়া করে সকল তথ্য পূরণ করুন।");
-            return;
-          }
+          const res = await fetch('/api/validate-candidate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ candidateId, candidateName, examCode })
+          });
+          const data = await res.json();
+          if (!data.success) { alert(data.message); return; }
 
-          try {
-            const res = await fetch('/api/validate-candidate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ candidateId, candidateName, examCode })
-            });
-            const data = await res.json();
+          const cfgRes = await fetch('/api/exam-config');
+          configData = await cfgRes.json();
 
-            if (!data.success) {
-              alert(data.message);
-              return;
-            }
-
-            const cfgRes = await fetch('/api/exam-config');
-            configData = await cfgRes.json();
-
-            document.getElementById('eng-passage').innerText = configData.engPassage || "";
-            document.getElementById('bn-passage').innerText = configData.bnPassage || "";
-            document.getElementById('eng-disp-name').innerText = candidateName;
-            document.getElementById('eng-disp-id').innerText = candidateId;
-            document.getElementById('bn-disp-name').innerText = candidateName;
-            document.getElementById('bn-disp-id').innerText = candidateId;
-
-            document.getElementById('login-card').classList.add('hidden');
-            document.getElementById('instruction-card').classList.remove('hidden');
-
-          } catch (err) {
-            alert("সার্ভার কানেকশনে সমস্যা হয়েছে!");
-          }
+          document.getElementById('login-card').classList.add('hidden');
+          document.getElementById('instruction-card').classList.remove('hidden');
         }
 
         function startEnglishStep() {
-          document.getElementById('instruction-card').classList.add('hidden');
-          document.getElementById('eng-card').classList.remove('hidden');
-          document.getElementById('btn-to-bn-instruction').classList.add('hidden');
-          document.getElementById('eng-typing-area').disabled = false;
-          document.getElementById('eng-typing-area').value = "";
-          document.getElementById('eng-typing-area').focus();
+            currentStep = 'eng';
+            showExam(configData.engPassage, 'ইংরেজি');
+        }
 
-          engTimeLeft = (parseInt(configData.duration) || 5) * 60;
-          updateEngTimerDisplay();
-          
-          engTimerInterval = setInterval(() => {
-            engTimeLeft--;
-            if (engTimeLeft <= 0) { 
-              clearInterval(engTimerInterval); 
-              document.getElementById('eng-timer').innerText = "00:00";
-              document.getElementById('eng-typing-area').disabled = true; 
-              document.getElementById('btn-to-bn-instruction').classList.remove('hidden'); 
+        function showExam(passage, title) {
+            document.getElementById('instruction-card').classList.add('hidden');
+            document.getElementById('exam-card').classList.remove('hidden');
+            document.getElementById('lang-title').innerText = title;
+            document.getElementById('passage-box').innerText = passage;
+            document.getElementById('typing-area').value = "";
+            document.getElementById('btn-next').classList.add('hidden');
+            
+            timeLeft = (parseInt(configData.duration) || 5) * 60;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+                document.getElementById('timer').innerText = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('typing-area').disabled = true;
+                    document.getElementById('btn-next').classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        function handleNextStep() {
+            if (currentStep === 'eng') {
+                currentStep = 'bn';
+                showExam(configData.bnPassage, 'বাংলা');
+            } else {
+                submitFinalExam();
             }
-            updateEngTimerDisplay();
-          }, 1000);
-        }
-
-        function updateEngTimerDisplay() {
-          let m = Math.floor(engTimeLeft / 60), s = engTimeLeft % 60;
-          document.getElementById('eng-timer').innerText = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
-        }
-
-        function finishEnglishStep() {
-          document.getElementById('eng-card').classList.add('hidden');
-          document.getElementById('bn-instruction-card').classList.remove('hidden'); 
-        }
-
-        function startBanglaStep() {
-          document.getElementById('bn-instruction-card').classList.add('hidden');
-          document.getElementById('bn-card').classList.remove('hidden');
-          document.getElementById('btn-submit-exam').classList.add('hidden');
-          document.getElementById('bn-typing-area').disabled = false;
-          document.getElementById('bn-typing-area').value = "";
-          document.getElementById('bn-typing-area').focus();
-
-          bnTimeLeft = (parseInt(configData.duration) || 5) * 60;
-          updateBnTimerDisplay();
-
-          bnTimerInterval = setInterval(() => {
-            bnTimeLeft--;
-            if (bnTimeLeft <= 0) { 
-              clearInterval(bnTimerInterval); 
-              document.getElementById('bn-timer').innerText = "00:00";
-              document.getElementById('bn-typing-area').disabled = true; 
-              document.getElementById('btn-submit-exam').classList.remove('hidden'); 
-            }
-            updateBnTimerDisplay();
-          }, 1000);
-        }
-
-        function updateBnTimerDisplay() {
-          let m = Math.floor(bnTimeLeft / 60), s = bnTimeLeft % 60;
-          document.getElementById('bn-timer').innerText = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
-        }
-
-        function trackTypingLive() {
-          const engText = document.getElementById('eng-typing-area').value;
-          const bnText = document.getElementById('bn-typing-area').value;
-          const step = !document.getElementById('eng-card').classList.contains('hidden') ? 'eng' : 'bn';
-          
-          fetch('/api/save-progress', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ candidateId, candidateName, step, engText, bnText })
-          }).catch(e => {});
         }
 
         async function submitFinalExam() {
-          if (engTimerInterval) clearInterval(engTimerInterval);
-          if (bnTimerInterval) clearInterval(bnTimerInterval);
-
-          try {
+            // সার্ভার থেকে প্রাপ্ত রেজাল্ট অবজেক্টের ভিত্তিতে স্ট্রোকের কলামগুলো দেখানো
             const res = await fetch('/api/submit-exam', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                candidateId, 
-                candidateName, 
-                examCode, 
-                engText: document.getElementById('eng-typing-area').value, 
-                bnText: document.getElementById('bn-typing-area').value 
-              })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ candidateId, candidateName, examCode })
             });
             const data = await res.json();
-
-            if (data.success) {
-              document.getElementById('eng-card').classList.add('hidden');
-              document.getElementById('bn-card').classList.add('hidden');
-              document.getElementById('success-card').classList.remove('hidden');
-              document.getElementById('submitted-roll').innerText = candidateId;
-            } else {
-              alert(data.message || "সাবমিট করতে সমস্যা হয়েছে।");
-            }
-          } catch (err) { 
-            alert("সার্ভার ত্রুটি!"); 
-          }
+            
+            const r = data.result;
+            document.getElementById('exam-card').classList.add('hidden');
+            document.getElementById('success-card').classList.remove('hidden');
+            document.getElementById('result-summary').innerHTML = `
+                <table class="result-table">
+                    <tr><th>ভাষা</th><th>মোট স্ট্রোক</th><th>সঠিক স্ট্রোক</th><th>সঠিকতা (%)</th><th>ভুল স্ট্রোক</th><th>ভুল (%)</th></tr>
+                    <tr><td>ইংরেজি</td><td>${r.english.totalWords}</td><td>${r.english.correctWords}</td><td>${r.english.accuracy}%</td><td>${r.english.errors}</td><td>${r.english.errorPercent}%</td></tr>
+                    <tr><td>বাংলা</td><td>${r.bangla.totalWords}</td><td>${r.bangla.correctWords}</td><td>${r.bangla.accuracy}%</td><td>${r.bangla.errors}</td><td>${r.bangla.errorPercent}%</td></tr>
+                </table>`;
         }
     </script>
 </body>
