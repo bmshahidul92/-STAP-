@@ -122,7 +122,7 @@ app.post('/api/validate-candidate', (req, res) => {
   if (isCompleted) {
     const session = db.activeSessions[candidateId];
     if (!session) {
-      return res.json({ success: false, message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে।" });
+      return res.json({ success: false, message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে।" });
     }
   }
 
@@ -156,14 +156,14 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 /**
- * Without Space মেট্রিকস ক্যালকুলেশন (স্পেস বা ফাঁকা জায়গা বাদ দিয়ে শুধু অক্ষর গণনা এবং ৫ স্ট্রোকে ১ শব্দ)
+ * ওয়ার্ড-বাই-ওয়ার্ড কঠোর পজিশন-শিফট মেট্রিকস ক্যালকুলেশন
+ * (একটি শব্দের ভুল ওই শব্দের মধ্যেই সীমাবদ্ধ থাকবে, পরের শব্দে এর কোনো প্রভাব পড়বে না)
  */
 function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
-  // সমস্ত স্পেস, ট্যাব বা নতুন লাইন বাদ দেওয়া হলো
-  const cleanOriginal = (original || "").replace(/\s+/g, "");
-  const cleanTyped = (typed || "").replace(/\s+/g, "");
+  const origText = original || "";
+  const typeText = typed || "";
 
-  if (cleanTyped === "") {
+  if (typeText.trim() === "") {
     return {
       totalWords: 0,
       correctWords: 0,
@@ -176,49 +176,63 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  let typedChars, origChars;
+  let origWords = origText.trim().split(/\s+/);
+  let typedWords = typeText.trim().split(/\s+/);
 
-  if (isBangla) {
-    // বাংলার ক্ষেত্রে ইউনিকোড কার-চিহ্ন ও যুক্তাক্ষর সঠিকভাবে বিভাজনের জন্য গ্রাফিম ক্লাস্টার ব্যবহার
-    const segmenter = new Intl.Segmenter('bn', { granularity: 'grapheme' });
-    typedChars = Array.from(segmenter.segment(cleanTyped), s => s.segment);
-    origChars = Array.from(segmenter.segment(cleanOriginal), s => s.segment);
-  } else {
-    typedChars = Array.from(cleanTyped);
-    origChars = Array.from(cleanOriginal);
-  }
-
-  // ১. স্পেস ছাড়া মোট টাইপকৃত ক্যারেক্টার গণনা এবং ৫ স্ট্রোকে ১ শব্দ হিসাব
-  const totalTypedChars = typedChars.length;
-  const standardWords = totalTypedChars / 5; 
-
-  // ২. ক্যারেক্টার বাই ক্যারেক্টার নিখুঁত তুলনা
+  let totalTypedChars = 0;
   let correctChars = 0;
   let errors = 0;
 
-  typedChars.forEach((char, index) => {
-    if (origChars[index] === char) {
-      correctChars++;
-    } else {
-      errors++;
-    }
-  });
+  const maxWords = Math.max(origWords.length, typedWords.length);
 
-  // যদি টাইপ করা লেখা মূল লেখার চেয়ে বড় হয়, তবে অতিরিক্ত অংশ ভুল হিসেবে যোগ হবে
-  if (typedChars.length > origChars.length) {
-    errors += (typedChars.length - origChars.length);
+  for (let w = 0; w < maxWords; w++) {
+    const oWord = origWords[w] || "";
+    const tWord = typedWords[w] || "";
+
+    let oChars, tChars;
+    if (isBangla) {
+      const segmenter = new Intl.Segmenter('bn', { granularity: 'grapheme' });
+      oChars = Array.from(segmenter.segment(oWord), s => s.segment);
+      tChars = Array.from(segmenter.segment(tWord), s => s.segment);
+    } else {
+      oChars = Array.from(oWord);
+      tChars = Array.from(tWord);
+    }
+
+    totalTypedChars += tChars.length;
+
+    let mismatchFound = false;
+    const maxLength = Math.max(oChars.length, tChars.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const oChar = oChars[i];
+      const tChar = tChars[i];
+
+      if (mismatchFound) {
+        errors++;
+      } else {
+        if (tChar === undefined || oChar === undefined || oChar !== tChar) {
+          mismatchFound = true;
+          errors++;
+        } else {
+          correctChars++;
+        }
+      }
+    }
+    
+    if (tWord.length > 0 && w < maxWords - 1) {
+      totalTypedChars += 1; 
+    }
   }
 
+  const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
   const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
   
-  // ৩. গ্রস ও নেট ডব্লিউপিএম হিসাব
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  
   const standardCorrectWords = correctChars / 5;
   const netWpm = durationMin > 0 ? Math.max(0, Math.round(standardCorrectWords / durationMin)) : 0;
   
-  // ৪. পাসের শর্ত: ভুল ৫% এর কম (< 5.0%) এবং নেট ডব্লিউপিএম ন্যূনতম পাসের সমান বা বেশি হতে হবে।
   const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
