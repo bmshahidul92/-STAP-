@@ -70,7 +70,7 @@
             <div class="instruction-list">
                 <ul>
                     <li>প্রথমে <strong>ইংরেজি টাইপিং</strong> পরীক্ষা অনুষ্ঠিত হবে।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে এবং এডিট করা যাবে না।</li>
+                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে এবং এডিট করা যাবে না।</li>
                     <li>কোনো ধরনের <strong>Copy, Paste বা Cut</strong> করার সুযোগ নেই।</li>
                     <li><strong>৫% এর বেশি ভুল</strong> হলে বা নির্দিষ্ট ডব্লিউপিএম (WPM) না থাকলে ফেল হিসেবে গণ্য হবে।</li>
                 </ul>
@@ -96,8 +96,8 @@
             <hr><br>
             <div class="instruction-list">
                 <ul>
-                    <li>ইংরেজি পরীক্ষা সফলভাবে সম্পন্ন হয়েছে। এখন <strong>বাংলা টাইপিং</strong> পরীক্ষা শুরু হবে।</li>
-                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে।</li>
+                    <li>ইংরেজি পরীক্ষা সফলভাবে সম্পন্ন হয়েছে। এখন <strong>বাংলা টাইপিং</strong> পরীক্ষা শুরু হবে।</li>
+                    <li>নির্ধারিত সময় শেষ হওয়া মাত্রই লেখা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যাবে।</li>
                 </ul>
             </div>
             <button onclick="startBanglaStep()" class="btn-action" style="background:#16a34a;">বাংলা শুরু করুন</button>
@@ -181,6 +181,8 @@
           document.getElementById('eng-card').classList.remove('hidden');
           document.getElementById('btn-to-bn-instruction').classList.add('hidden');
           document.getElementById('eng-typing-area').disabled = false;
+          document.getElementById('eng-typing-area').value = "";
+          document.getElementById('eng-typing-area').focus();
 
           engTimeLeft = (parseInt(configData.duration) || 5) * 60;
           updateEngTimerDisplay();
@@ -190,8 +192,8 @@
             if (engTimeLeft <= 0) { 
               clearInterval(engTimerInterval); 
               document.getElementById('eng-timer').innerText = "00:00";
-              document.getElementById('eng-typing-area').disabled = true; // লেখা বা এডিট বন্ধ
-              document.getElementById('btn-to-bn-instruction').classList.remove('hidden'); // বাংলায় যান অপশন দৃশ্যমান
+              document.getElementById('eng-typing-area').disabled = true; 
+              document.getElementById('btn-to-bn-instruction').classList.remove('hidden'); 
             }
             updateEngTimerDisplay();
           }, 1000);
@@ -204,7 +206,7 @@
 
         function finishEnglishStep() {
           document.getElementById('eng-card').classList.add('hidden');
-          document.getElementById('bn-instruction-card').classList.remove('hidden'); // বাংলা নির্দেশনা দেখাবে
+          document.getElementById('bn-instruction-card').classList.remove('hidden'); 
         }
 
         function startBanglaStep() {
@@ -212,6 +214,8 @@
           document.getElementById('bn-card').classList.remove('hidden');
           document.getElementById('btn-submit-exam').classList.add('hidden');
           document.getElementById('bn-typing-area').disabled = false;
+          document.getElementById('bn-typing-area').value = "";
+          document.getElementById('bn-typing-area').focus();
 
           bnTimeLeft = (parseInt(configData.duration) || 5) * 60;
           updateBnTimerDisplay();
@@ -221,8 +225,8 @@
             if (bnTimeLeft <= 0) { 
               clearInterval(bnTimerInterval); 
               document.getElementById('bn-timer').innerText = "00:00";
-              document.getElementById('bn-typing-area').disabled = true; // লেখা বা এডিট বন্ধ
-              document.getElementById('btn-submit-exam').classList.remove('hidden'); // জমা দিন অপশন দৃশ্যমান
+              document.getElementById('bn-typing-area').disabled = true; 
+              document.getElementById('btn-submit-exam').classList.remove('hidden'); 
             }
             updateBnTimerDisplay();
           }, 1000);
@@ -236,7 +240,8 @@
         function trackTypingLive() {
           const engText = document.getElementById('eng-typing-area').value;
           const bnText = document.getElementById('bn-typing-area').value;
-          const step = !document.getElementById('eng-card').classList.contains('hidden') ? 'english' : 'bangla';
+          const step = !document.getElementById('eng-card').classList.contains('hidden') ? 'eng' : 'bn';
+          
           fetch('/api/save-progress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
