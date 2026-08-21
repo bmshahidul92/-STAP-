@@ -156,8 +156,7 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 /**
- * ওয়ার্ড-বাই-ওয়ার্ড কঠোর পজিশন-শিফট মেট্রিকস ক্যালকুলেশন
- * (একটি শব্দের ভুল ওই শব্দের মধ্যেই সীমাবদ্ধ থাকবে, পরের শব্দে এর কোনো প্রভাব পড়বে না)
+ * মাইক্রোসফট ওয়ার্ডের নিয়ম ও আপনার চাহিদা অনুযায়ী শব্দভিত্তিক সঠিক ক্যারেক্টার ও ভুল গণনার লজিক
  */
 function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
   const origText = original || "";
@@ -183,45 +182,26 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
   let correctChars = 0;
   let errors = 0;
 
+  // মাইক্রোসফট ওয়ার্ডের গ্রাফিম ক্লাস্টার সেন্সর
+  const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   const maxWords = Math.max(origWords.length, typedWords.length);
 
   for (let w = 0; w < maxWords; w++) {
     const oWord = origWords[w] || "";
     const tWord = typedWords[w] || "";
 
-    let oChars, tChars;
-    if (isBangla) {
-      const segmenter = new Intl.Segmenter('bn', { granularity: 'grapheme' });
-      oChars = Array.from(segmenter.segment(oWord), s => s.segment);
-      tChars = Array.from(segmenter.segment(tWord), s => s.segment);
+    let oChars = Array.from(segmenter.segment(oWord), x => x.segment).filter(c => c.trim() !== '');
+    let tChars = Array.from(segmenter.segment(tWord), x => x.segment).filter(c => c.trim() !== '');
+
+    const tLength = tChars.length;
+    totalTypedChars += tLength;
+
+    // মূল শব্দ এবং টাইপ করা শব্দ হুবহু মিললে সম্পূর্ণ ক্যারেক্টার সঠিক হিসেবে যোগ হবে
+    if (oWord === tWord) {
+      correctChars += tLength;
     } else {
-      oChars = Array.from(oWord);
-      tChars = Array.from(tWord);
-    }
-
-    totalTypedChars += tChars.length;
-
-    let mismatchFound = false;
-    const maxLength = Math.max(oChars.length, tChars.length);
-
-    for (let i = 0; i < maxLength; i++) {
-      const oChar = oChars[i];
-      const tChar = tChars[i];
-
-      if (mismatchFound) {
-        errors++;
-      } else {
-        if (tChar === undefined || oChar === undefined || oChar !== tChar) {
-          mismatchFound = true;
-          errors++;
-        } else {
-          correctChars++;
-        }
-      }
-    }
-    
-    if (tWord.length > 0 && w < maxWords - 1) {
-      totalTypedChars += 1; 
+      // বানান ভুল হলে পুরো শব্দটির ক্যারেক্টার সংখ্যাই ভুল (Errors) হিসেবে গণ্য হবে
+      errors += tLength;
     }
   }
 
