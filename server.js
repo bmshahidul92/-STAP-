@@ -10,6 +10,7 @@ const io = new Server(server);
 
 app.use(express.json());
 
+// স্ট্যাটিক ফাইল এবং রুট ডিরেক্টরি সঠিকভাবে সেট করা
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -33,6 +34,7 @@ let db = {
   activeSessions: {}
 };
 
+// পার্মানেন্ট ডাটা লোড করার নিরাপদ ফাংশন
 function loadData() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -46,8 +48,12 @@ function loadData() {
         if (!db.config.securityQuestion) db.config.securityQuestion = "আপনার প্রিয় রঙ কোনটি?";
         if (!db.config.securityAnswer) db.config.securityAnswer = "blue";
         
-        if (!db.mobileSettings) db.mobileSettings = db.rollSettings || {};
-        if (!db.completedMobiles) db.completedMobiles = db.completedRolls || {};
+        if (!db.mobileSettings) {
+          db.mobileSettings = db.rollSettings || {};
+        }
+        if (!db.completedMobiles) {
+          db.completedMobiles = db.completedRolls || {};
+        }
         if (!db.results) db.results = [];
         if (!db.activeSessions) db.activeSessions = {};
       }
@@ -59,6 +65,7 @@ function loadData() {
   }
 }
 
+// পার্মানেন্ট ডাটা সেভ করার ফাংশন
 function saveData() {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2), 'utf8');
@@ -67,6 +74,7 @@ function saveData() {
   }
 }
 
+// সার্ভার চালুর শুরুতেই ডাটা লোড
 loadData();
 
 app.get('/', (req, res) => {
@@ -82,6 +90,7 @@ app.get('/api/exam-config', (req, res) => {
   });
 });
 
+// পরীক্ষার্থী ভ্যালিডেশন
 app.post('/api/validate-candidate', (req, res) => {
   const { candidateId, examCode } = req.body; 
   const mobileInfo = db.mobileSettings[candidateId];
@@ -147,8 +156,7 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 /**
- * মাইক্রোসফট ওয়ার্ডের গ্রাফিম নিয়ম অনুযায়ী হুবহু ক্যারেক্টার ও ভুল গণনার লজিক
- * ভুল শব্দ টাইপ করলে পুরো শব্দের গ্রাফিম সংখ্যাই ভুল (Errors) হিসেবে গণ্য হবে।
+ * মাইক্রোসফট ওয়ার্ডের সাথে ১০০% মিল রেখে Intl.Segmenter ব্যবহার করে গ্রাফিম-ভিত্তিক নির্ভুল মেট্রিকস ক্যালকুলেশন
  */
 function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
   const origText = original || "";
@@ -156,8 +164,8 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
 
   if (typeText.trim() === "") {
     return {
-      totalChars: 0,
-      correctChars: 0,
+      totalWords: 0,
+      correctWords: 0,
       errors: 0,
       accuracy: 0,
       errorPercent: 100,
@@ -181,34 +189,44 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     const oWord = origWords[w] || "";
     const tWord = typedWords[w] || "";
 
+    let oChars = Array.from(segmenter.segment(oWord), x => x.segment).filter(c => c.trim() !== '');
     let tChars = Array.from(segmenter.segment(tWord), x => x.segment).filter(c => c.trim() !== '');
-    const tLength = tChars.length;
-    
-    totalTypedChars += tLength;
 
-    if (oWord === tWord) {
-      correctChars += tLength;
-    } else {
-      // বানান ভুল হলে পুরো শব্দের ক্যারেক্টার বা স্ট্রোক সংখ্যাই ভুল হিসেবে কাউন্ট হবে
-      errors += tLength;
+    totalTypedChars += tChars.length;
+
+    let mismatchFound = false;
+    const maxLength = Math.max(oChars.length, tChars.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const oChar = oChars[i];
+      const tChar = tChars[i];
+
+      if (mismatchFound) {
+        errors++;
+      } else {
+        if (tChar === undefined || oChar === undefined || oChar !== tChar) {
+          mismatchFound = true;
+          errors++;
+        } else {
+          correctChars++;
+        }
+      }
     }
   }
 
+  const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
   const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
   
-  // ডব্লিউপিএম (WPM) গণনার প্রমিত নিয়ম: স্ট্যান্ডার্ড ৫ ক্যারেক্টার = ১ শব্দ
-  const standardWords = totalTypedChars / 5; 
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  
   const standardCorrectWords = correctChars / 5;
   const netWpm = durationMin > 0 ? Math.max(0, Math.round(standardCorrectWords / durationMin)) : 0;
   
   const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
-    totalChars: totalTypedChars, // মোট ক্যারেক্টার বা স্ট্রোক
-    correctChars: correctChars,
+    totalWords: Math.round(standardWords),
+    correctWords: Math.round(standardCorrectWords),
     errors,
     accuracy,
     errorPercent,
