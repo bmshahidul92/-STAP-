@@ -96,7 +96,7 @@ app.post('/api/validate-candidate', (req, res) => {
   }
 
   if (mobileInfo.isBlocked) {
-    return res.json({ success: false, message: "এই মোবাইল নম্বরটি বর্তমানে ব্লক করা রয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।" });
+    return res.json({ success: false, message: "এই মোবাইল নম্বরটি বর্তমানে ব্লক করা রয়েছে।" });
   }
 
   if (mobileInfo.expiryTime) {
@@ -113,7 +113,7 @@ app.post('/api/validate-candidate', (req, res) => {
   if (isCompleted) {
     const session = db.activeSessions[candidateId];
     if (!session) {
-      return res.json({ success: false, message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে।" });
+      return res.json({ success: false, message: "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে পরীক্ষা সম্পন্ন হয়েছে।" });
     }
   }
 
@@ -147,8 +147,7 @@ app.post('/api/save-progress', (req, res) => {
 });
 
 /**
- * মাইক্রোসফট ওয়ার্ডের গ্রাফিম নিয়ম অনুযায়ী হুবহু ক্যারেক্টার ও ভুল গণনার লজিক
- * ভুল শব্দ টাইপ করলে পুরো শব্দের গ্রাফিম সংখ্যাই ভুল (Errors) হিসেবে গণ্য হবে।
+ * মাইক্রোসফট ওয়ার্ডের স্টাইলে স্ট্রোক বা ক্যারেক্টার এবং ভুল গণনার নিখুঁত লজিক (বাংলা ও ইংরেজি উভয় ক্ষেত্রে সমান)
  */
 function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = false) {
   const origText = original || "";
@@ -156,8 +155,8 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
 
   if (typeText.trim() === "") {
     return {
-      totalChars: 0,
-      correctChars: 0,
+      totalWords: 0,
+      correctWords: 0,
       errors: 0,
       accuracy: 0,
       errorPercent: 100,
@@ -167,51 +166,52 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  let origWords = origText.trim().split(/\s+/);
-  let typedWords = typeText.trim().split(/\s+/);
-
-  let totalTypedChars = 0;
-  let correctChars = 0;
-  let errors = 0;
-
+  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে স্পেস ও অক্ষর সহ নিখুঁত স্ট্রোক আলাদা করা
   const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
-  const maxWords = Math.max(origWords.length, typedWords.length);
+  
+  const origChars = Array.from(segmenter.segment(origText), x => x.segment);
+  const typedChars = Array.from(segmenter.segment(typeText), x => x.segment);
 
-  for (let w = 0; w < maxWords; w++) {
-    const oWord = origWords[w] || "";
-    const tWord = typedWords[w] || "";
+  const totalTypedChars = typedChars.length; // মোট স্ট্রোক বা ক্যারেক্টার
+  let correctChars = 0; // সঠিক স্ট্রোক
+  let errors = 0;       // ভুল স্ট্রোক
 
-    let tChars = Array.from(segmenter.segment(tWord), x => x.segment).filter(c => c.trim() !== '');
-    const tLength = tChars.length;
-    
-    totalTypedChars += tLength;
+  const maxLength = Math.max(origChars.length, typedChars.length);
 
-    if (oWord === tWord) {
-      correctChars += tLength;
+  for (let i = 0; i < maxLength; i++) {
+    const oChar = origChars[i];
+    const tChar = typedChars[i];
+
+    if (tChar === undefined) {
+      // কম টাইপ করা হলে তা ভুল বা মিসিং স্ট্রোক হিসেবে গণ্য হবে
+      errors++;
+    } else if (oChar === undefined) {
+      // বেশি বা অতিরিক্ত টাইপ করা হলে (যেমন আন্তর্জাতিক শব্দে অতিরিক্ত অক্ষর) তা ভুল স্ট্রোক হিসেবে গণ্য হবে
+      errors++;
+    } else if (oChar === tChar) {
+      correctChars++;
     } else {
-      // বানান ভুল হলে পুরো শব্দের ক্যারেক্টার বা স্ট্রোক সংখ্যাই ভুল হিসেবে কাউন্ট হবে
-      errors += tLength;
+      errors++;
     }
   }
 
+  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ হিসেবে WPM নির্ণয়ের জন্য)
+  const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
   const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
   
-  // ডব্লিউপিএম (WPM) গণনার প্রমিত নিয়ম: স্ট্যান্ডার্ড ৫ ক্যারেক্টার = ১ শব্দ
-  const standardWords = totalTypedChars / 5; 
   const grossWpm = durationMin > 0 ? Math.round(standardWords / durationMin) : 0;
-  
   const standardCorrectWords = correctChars / 5;
   const netWpm = durationMin > 0 ? Math.max(0, Math.round(standardCorrectWords / durationMin)) : 0;
   
   const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
-    totalChars: totalTypedChars, // মোট ক্যারেক্টার বা স্ট্রোক
-    correctChars: correctChars,
-    errors,
-    accuracy,
-    errorPercent,
+    totalWords: totalTypedChars,      // মোট স্ট্রোক (যেমনটি আপনি চেয়েছিলেন)
+    correctWords: correctChars,      // সঠিক স্ট্রোক
+    errors: errors,                  // ভুল স্ট্রোক (মাইক্রোসফট ওয়ার্ডের নিয়মে নিখুঁত হিসাব)
+    accuracy: accuracy,              // স্ট্রোক হিসেবে সঠিকতার শতকরা হার (%)
+    errorPercent: errorPercent,      // স্ট্রোক হিসেবে ভুলের শতকরা হার (%)
     grossWpm,
     netWpm,
     passed: isPassed
@@ -228,13 +228,8 @@ app.post('/api/submit-exam', (req, res) => {
   const now = new Date();
   const submissionTime = now.toLocaleString('bn-BD', { 
     timeZone: 'Asia/Dhaka', 
-    year: 'numeric', 
-    month: 'numeric', 
-    day: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit', 
-    hour12: true 
+    year: 'numeric', month: 'numeric', day: 'numeric', 
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
   });
 
   const finalResult = {
@@ -288,7 +283,7 @@ app.post('/api/admin/update-config', (req, res) => {
   }
 
   if (examCode) db.config.examCode = examCode;
-  if (engPassage !== undefined) db.config.engPassage = engPassage;
+  if (engPassage !== undefined) db.config.examPassage = engPassage;
   if (bnPassage !== undefined) db.config.bnPassage = bnPassage;
   if (duration) db.config.duration = parseInt(duration);
   if (engMinPassWpm) db.config.engMinPassWpm = parseInt(engMinPassWpm);
@@ -326,7 +321,7 @@ app.post('/api/admin/update-config', (req, res) => {
   if (newSecAns && newSecAns.trim() !== "") db.config.securityAnswer = newSecAns.trim();
 
   saveData();
-  res.json({ success: true, message: "সেটিংস ও মোবাইল নম্বর ম্যানেজমেন্ট সফলভাবে আপডেট হয়েছে!" });
+  res.json({ success: true, message: "সেটিংস সফলভাবে আপডেট হয়েছে!" });
 });
 
 app.post('/api/admin/delete-roll', (req, res) => {
@@ -358,9 +353,9 @@ app.post('/api/admin/reset-session', (req, res) => {
 
   if (cleared) {
     saveData();
-    res.json({ success: true, message: `মোবাইল নম্বর ${candidateId}-কে পুনরায় টাইপ করার অনুমতি দেওয়া হয়েছে।` });
+    res.json({ success: true, message: `মোবাইল নম্বর ${candidateId}-কে পুনরায় পরীক্ষার অনুমতি দেওয়া হয়েছে।` });
   } else {
-    res.json({ success: false, message: "এই নম্বরের কোনো সক্রিয় বা সম্পন্ন রেকর্ড পাওয়া যায়নি।" });
+    res.json({ success: false, message: "কোনো সক্রিয় রেকর্ড পাওয়া যায়নি।" });
   }
 });
 
@@ -398,56 +393,16 @@ app.get('/api/results', (req, res) => {
   res.json(filteredResults);
 });
 
-app.post('/api/admin/delete-result', (req, res) => {
-  const { candidateId, examCode } = req.body;
-  const initialLength = db.results.length;
-  db.results = db.results.filter(r => !(r.candidateId === candidateId && r.examCode === examCode));
-
-  if (db.results.length < initialLength) {
-    const recordKey = `${examCode}_${candidateId}`;
-    if (db.completedMobiles && db.completedMobiles[recordKey]) {
-      delete db.completedMobiles[recordKey];
-    }
-    saveData();
-    return res.json({ success: true, message: "পরীক্ষার্থীর ফলাফল সফলভাবে মুছে ফেলা হয়েছে।" });
-  } else {
-    return res.json({ success: false, message: "ফলাফলটি পাওয়া যায়নি।" });
-  }
-});
-
 app.post('/api/admin/reset-all-results', (req, res) => {
   const { password } = req.body;
-
   if (password !== db.config.adminPassword) {
     return res.json({ success: false, message: "ভুল এডমিন পাসওয়ার্ড!" });
   }
-
   db.results = [];
   db.completedMobiles = {};
   db.activeSessions = {};
   saveData();
-  
-  res.json({ success: true, message: "সমস্ত পরীক্ষার্থীর ফলাফল এবং ডাটা সফলভাবে মুছে ফেলা হয়েছে!" });
-});
-
-app.delete('/api/results/:index', (req, res, next) => {
-  const idx = parseInt(req.params.index);
-  if (idx >= 0 && idx < db.results.length) {
-    db.results.splice(idx, 1);
-    saveData();
-  }
-  res.json({ success: true });
-});
-
-app.delete('/api/results', (req, res, next) => {
-  db.results = [];
-  db.completedMobiles = {};
-  saveData();
-  res.json({ success: true });
-});
-
-app.get('/api/admin/active-sessions', (req, res) => {
-  res.json(db.activeSessions);
+  res.json({ success: true, message: "সমস্ত ফলাফল সফলভাবে মুছে ফেলা হয়েছে!" });
 });
 
 const PORT = process.env.PORT || 3000;
