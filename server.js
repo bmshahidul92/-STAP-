@@ -166,46 +166,38 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
- // ১. স্পেস এবং অদৃশ্য ক্যারেক্টার বাদ দিয়ে নিখুঁত স্ট্রোক বা গ্রাফিম আলাদা করার ফাংশন
-const getChars = (text) => Array.from(new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' }).segment(text), x => x.segment).filter(c => c.trim() !== "");
+ // ১. স্পেস বাদ দিয়ে শুধু লেখা বা ক্যারেক্টারগুলো নেওয়া
+const origClean = origText.replace(/\s+/g, '');
+const typedClean = typeText.replace(/\s+/g, '');
 
-const origChars = getChars(origText);
-const typedChars = getChars(typeText);
-
-const totalOriginalChars = origChars.length; // প্রশ্নের মোট ক্যারেক্টার
-const totalTypedChars = typedChars.length;   // মোট টাইপকৃত ক্যারেক্টার
+const totalTypedChars = typedClean.length;         // স্পেস ছাড়া মোট টাইপকৃত ক্যারেক্টার
+const totalOriginalChars = origClean.length;     // স্পেস ছাড়া প্রশ্নের মোট ক্যারেক্টার
 
 let correctChars = 0;
 let errors = 0;
 
-// ২. ক্যারেক্টার বাই ক্যারেক্টার বা শব্দভিত্তিক সুনির্দিষ্ট তুলনা লজিক
+// ২. শব্দভিত্তিক তুলনা লজিক
 const origWords = origText.trim().split(/\s+/);
 const typedWords = typeText.trim().split(/\s+/);
 
 for (let i = 0; i < origWords.length; i++) {
-    const origWord = origWords[i] || "";
-    const typedWord = typedWords[i];
-
-    const origWordChars = getChars(origWord);
-
-    if (typedWord === origWord) {
-        // শব্দ হুবহু মিলে গেলে পুরো শব্দের ক্যারেক্টার সঠিক হিসেবে যোগ হবে
-        correctChars += origWordChars.length;
+    if (typedWords[i] === origWords[i]) {
+        // শব্দ সঠিক হলে স্পেস বাদ দিয়ে ওই শব্দের ক্যারেক্টারগুলো যোগ হবে
+        correctChars += origWords[i] ? origWords[i].replace(/\s+/g, '').length : 0;
     } else {
-        // শব্দ ভুল হলে বা না মিললে ওই শব্দের পুরো ক্যারেক্টার ভুল হিসেবে গণ্য হবে
-        errors += origWordChars.length;
+        // শব্দ ভুল হলে মূল শব্দের ক্যারেক্টারগুলো ভুল হিসেবে যোগ হবে
+        errors += origWords[i] ? origWords[i].replace(/\s+/g, '').length : 0;
     }
 }
 
-// ৩. মূল প্যাসেজের বাইরে অতিরিক্ত শব্দ বা ক্যারেক্টার টাইপ করলে তাও ভুল ধরবে
+// ৩. অতিরিক্ত টাইপ করলে তাও ভুল ধরবে
 if (typedWords.length > origWords.length) {
     for (let j = origWords.length; j < typedWords.length; j++) {
-        const extraWordChars = getChars(typedWords[j] || "");
-        errors += extraWordChars.length;
+        errors += typedWords[j] ? typedWords[j].replace(/\s+/g, '').length : 0;
     }
 }
 
-// ৪. সেফটি চেক: সঠিক ক্যারেক্টার কোনোভাবেই মোট টাইপকৃত ক্যারেক্টারকে অতিক্রম করবে না
+// ৪. সেফটি চেক
 if (correctChars > totalTypedChars) {
     correctChars = totalTypedChars;
 } 
