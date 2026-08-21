@@ -124,7 +124,7 @@
         <table style="background:#fff;">
           <thead>
             <tr>
-              <th>রোল নম্বর</th>
+              <th>মোবাইল নম্বর</th>
               <th>নাম</th>
               <th>বর্তমান ধাপ</th>
               <th>গতি (WPM)</th>
@@ -141,7 +141,7 @@
 
     <!-- কাস্টমাইজেশন প্যানেল -->
     <div class="config-box no-print">
-      <h3 style="margin-top:0; color:#1e40af;">⚙️ পরীক্ষা সেটআপ ও রোল ম্যানেজমেন্ট প্যানেল</h3>
+      <h3 style="margin-top:0; color:#1e40af;">⚙️ পরীক্ষা সেটআপ ও মোবাইল নম্বর ম্যানেজমেন্ট প্যানেল</h3>
       
       <div class="config-grid">
         <div class="form-group">
@@ -165,19 +165,19 @@
         </div>
       </div>
 
-      <!-- নতুন রোল যুক্ত করার ঘর -->
+      <!-- নতুন মোবাইল নম্বর যুক্ত করার ঘর -->
       <div class="form-group">
-        <label>নতুন রোল নম্বরসমূহ যুক্ত করুন (কমা বা নতুন লাইনে আলাদা করুন):</label>
-        <textarea id="cfg-new-rolls" rows="2" class="english-num" placeholder="যেমন: 101, 102, 103"></textarea>
+        <label>নতুন মোবাইল নম্বরসমূহ যুক্ত করুন (কমা বা নতুন লাইনে আলাদা করুন):</label>
+        <textarea id="cfg-new-rolls" rows="2" class="english-num" placeholder="যেমন: 01711223344, 01811223344"></textarea>
       </div>
 
-      <!-- রোলভিত্তিক মেয়াদ (Expiry), ব্লক/আনব্লক ও নির্দিষ্ট পরীক্ষা কোড টেবিল -->
-      <div class="section-title">📋 নিবন্ধিত রোলসমূহ ও পরীক্ষা কোড ম্যানেজমেন্ট</div>
+      <!-- মোবাইলভিত্তিক মেয়াদ (Expiry), ব্লক/আনব্লক ও নির্দিষ্ট পরীক্ষা কোড টেবিল -->
+      <div class="section-title">📋 নিবন্ধিত মোবাইল নম্বরসমূহ ও পরীক্ষা কোড ম্যানেজমেন্ট</div>
       <div style="max-height:250px; overflow-y:auto; border:1px solid #cbd5e1; background:#fff; margin-bottom:15px;">
         <table>
           <thead>
             <tr>
-              <th>রোল নম্বর</th>
+              <th>মোবাইল নম্বর</th>
               <th>অনুমোদিত পরীক্ষা কোড (যেমন: BCC2026, EXAM2)</th>
               <th>মেয়াদ উত্তীর্ণের তারিখ ও সময়</th>
               <th>ব্লক স্ট্যাটাস</th>
@@ -185,7 +185,7 @@
             </tr>
           </thead>
           <tbody id="roll-settings-body">
-            <tr><td colspan="5">কোনো রোল নিবন্ধিত নেই।</td></tr>
+            <tr><td colspan="5">কোনো মোবাইল নম্বর নিবন্ধিত নেই।</td></tr>
           </tbody>
         </table>
       </div>
@@ -201,10 +201,10 @@
         </div>
       </div>
 
-      <!-- পুনরায় টাইপিং অনুমতি (একক রোল রিসেট) -->
+      <!-- পুনরায় টাইপিং অনুমতি (একক মোবাইল রিসেট) -->
       <div class="section-title">🔄 পুনরায় টাইপিং অনুমতি (সেশন রিসেট)</div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <input type="text" id="reset-roll-input" class="english-num" placeholder="রোল নম্বর দিন" style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <input type="text" id="reset-roll-input" class="english-num" placeholder="মোবাইল নম্বর দিন" style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
         <input type="text" id="reset-code-input" class="english-num" placeholder="পরীক্ষা কোড (ঐচ্ছিক)" style="width:180px; padding:8px; border:1px solid #ccc; border-radius:4px;">
         <button onclick="allowReType()" class="btn-save" style="background:#ea580c;">পুনরায় টাইপ করার অনুমতি দিন</button>
       </div>
@@ -237,7 +237,7 @@
         <input type="password" id="cfg-new-sec-a">
       </div>
 
-      <button onclick="saveConfig()" class="btn-save" style="margin-top:15px;">সেটিংস ও রোল আপডেট করুন</button>
+      <button onclick="saveConfig()" class="btn-save" style="margin-top:15px;">সেটিংস ও মোবাইল নম্বর আপডেট করুন</button>
     </div>
 
     <!-- ফিল্টার ও প্রিন্ট অপশন সেকশন -->
@@ -248,8 +248,8 @@
         <input type="text" id="filter-exam-codes" class="english-num" placeholder="যেমন: BCC2026, EXAM2">
       </div>
       <div class="form-group" style="flex:1; margin-bottom:0;">
-        <label>রোল নম্বর দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
-        <input type="text" id="filter-rolls" class="english-num" placeholder="যেমন: 101, 102, 105">
+        <label>মোবাইল নম্বর দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
+        <input type="text" id="filter-rolls" class="english-num" placeholder="যেমন: 01711, 01811">
       </div>
       <div>
         <button onclick="loadResults()" class="btn-save" style="padding:8px 15px; margin-right:5px;">ফিল্টার প্রয়োগ করুন</button>
@@ -262,7 +262,7 @@
       <table>
         <thead>
           <tr>
-            <th rowspan="2">রোল</th>
+            <th rowspan="2">মোবাইল</th>
             <th rowspan="2">পরীক্ষার্থীর নাম</th>
             <th rowspan="2">পরীক্ষা কোড</th>
             <th rowspan="2">জমা দেওয়ার সময়</th>
@@ -319,7 +319,7 @@
     </div>
   </div>
 
-  <!-- প্রিন্ট করার জন্য ডেডিকেটেড মার্কশিট ও সার্টিফিকেট পেপার (প্রিন্ট সময় ভিজিবল হবে) -->
+  <!-- প্রিন্ট করার জন্য ডেডিকেটেড মার্কশিট ও সার্টিফিকেট পেপার (প্রিন্ট সময় ভিজিবল হবে) -->
   <div id="print-sheet-container" class="print-sheet"></div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -390,7 +390,7 @@
       const rolls = Object.keys(rollSettings);
 
       if (rolls.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">কোনো রোল নিবন্ধিত নেই। নতুন রোল যোগ করুন।</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">কোনো মোবাইল নম্বর নিবন্ধিত নেই। নতুন নম্বর যোগ করুন।</td></tr>';
         return;
       }
 
@@ -456,7 +456,7 @@
     }
 
     async function deleteRoll(roll) {
-      if (confirm(`রোল ${roll} মুছে ফেলতে চান?`)) {
+      if (confirm(`মোবাইল নম্বর ${roll} মুছে ফেলতে চান?`)) {
         const res = await fetch('/api/admin/delete-roll', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ roll })
@@ -470,7 +470,7 @@
     async function allowReType() {
       const roll = document.getElementById('reset-roll-input').value.trim();
       const examCode = document.getElementById('reset-code-input').value.trim();
-      if(!roll) return alert("রোল নম্বর দিন!");
+      if(!roll) return alert("মোবাইল নম্বর দিন!");
       
       const res = await fetch('/api/admin/reset-session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -586,7 +586,7 @@
     function viewTypedCopy(index) {
       const row = globalResults[index];
       if (!row) return;
-      document.getElementById('modal-candidate-title').innerText = `রোল: ${row.candidateId} (${row.candidateName}) - পরীক্ষার কোড: ${row.examCode || '-'} - টাইপকৃত কপি`;
+      document.getElementById('modal-candidate-title').innerText = `মোবাইল: ${row.candidateId} (${row.candidateName}) - পরীক্ষার কোড: ${row.examCode || '-'} - টাইপকৃত কপি`;
       document.getElementById('modal-eng-text').innerText = row.engText || 'কোনো টেক্সট পাওয়া যায়নি।';
       document.getElementById('modal-bn-text').innerText = row.bnText || 'কোনো টেক্সট পাওয়া যায়নি।';
       document.getElementById('typed-copy-modal').classList.remove('hidden');
@@ -615,7 +615,7 @@
         <table style="width:100%; margin-bottom:20px; font-size:15px;">
           <tr>
             <td style="text-align:left; border:none; padding:5px;"><strong>পরীক্ষার্থীর নাম:</strong> ${row.candidateName}</td>
-            <td style="text-align:right; border:none; padding:5px;"><strong>রোল নম্বর:</strong> ${row.candidateId}</td>
+            <td style="text-align:right; border:none; padding:5px;"><strong>মোবাইল নম্বর:</strong> ${row.candidateId}</td>
           </tr>
           <tr>
             <td style="text-align:left; border:none; padding:5px;"><strong>জমাদানের সময়:</strong> ${row.submittedAt || '-'}</td>
@@ -677,24 +677,20 @@
             <p style="margin:5px 0; font-size:18px; color:#475569;">Certificate of Achievement in Typing Proficiency</p>
             <p style="margin:5px 0; font-size:14px; font-weight:bold;">পরীক্ষা কোড (Exam Code): ${row.examCode || 'N/A'}</p>
           </div>
-          
-          <div style="margin:20px 0;">
-            <p style="font-size:18px; margin:10px 0;">প্রত্যয়ন করা যাচ্ছে যে,</p>
-            <h2 style="font-size:30px; color:#1e40af; margin:10px 0; border-bottom:2px dashed #93c5fd; display:inline-block; padding-bottom:5px;">${row.candidateName}</h2>
-            <p style="font-size:18px; margin:10px 0;">রোল নম্বর: <strong>${row.candidateId}</strong></p>
-            <p style="font-size:16px; line-height:1.6; margin-top:15px;">
-              তিনি এসটিএপি (STAP) পোর্টালে সফলভাবে কম্পিউটার টাইপিং দক্ষতা পরীক্ষায় অংশগ্রহণ করে 
-              <strong>${row.overallPassed ? 'কৃতকার্য' : 'অংশগ্রহণ'}</strong> হয়েছেন। 
-              তার ইংরেজি টাইপিং নিট গতি <strong>${row.english.netWpm} WPM</strong> এবং বাংলা টাইপিং নিট গতি <strong>${row.bangla.netWpm} WPM</strong>।
-            </p>
+          <div>
+            <p style="font-size:18px;">এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,</p>
+            <h2 style="font-size:28px; color:#1e3a8a; margin:10px 0;">${row.candidateName}</h2>
+            <p style="font-size:16px;">মোবাইল নম্বর: <strong class="english-num">${row.candidateId}</strong></p>
+            <p style="font-size:16px; line-height:1.6;">তিনি শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টালে সফলভাবে বাংলা ও ইংরেজি টাইপিং পরীক্ষায় অংশগ্রহণ করে মূল্যায়ন সম্পন্ন করেছেন।</p>
+            <p style="font-size:16px; font-weight:bold;">সর্বশেষ ফলাফল: ${row.overallPassed ? 'কৃতকার্য (PASSED)' : 'অকৃতকার্য (FAILED)'}</p>
           </div>
-
-          <div style="display:flex; justify-content:space-between; margin-top:40px; text-align:center; padding:0 30px;">
+          <div style="display:flex; justify-content:space-between; margin-top:30px; text-align:center;">
             <div>
-              <p class="english-num" style="margin:0;">তারিখ: ${row.submittedAt || '-'}</p>
+              <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;" class="english-num">${row.submittedAt || '-'}</p>
+              <p style="margin:2px 0; font-size:14px;">তারিখ</p>
             </div>
             <div>
-              <p style="border-top:1px solid #333; width:220px; margin:0 auto; padding-top:5px; font-weight:bold;">কর্তৃপক্ষের স্বাক্ষর</p>
+              <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;">পরীক্ষা নিয়ন্ত্রক</p>
             </div>
           </div>
         </div>
@@ -702,31 +698,6 @@
 
       window.print();
     }
-
-    async function deleteResult(index) {
-      if (confirm("এই রেজাল্টটি মুছে ফেলতে চান?")) {
-        await fetch(`/api/results/${index}`, { method: 'DELETE' });
-        loadResults();
-      }
-    }
-
-    async function resetAllData() {
-      if (confirm("সকল ফলাফল রিসেট করতে চান?")) {
-        await fetch('/api/results', { method: 'DELETE' });
-        loadResults();
-      }
-    }
-
-    try {
-      const socket = io();
-      socket.on('exam_submitted', () => {
-        loadResults();
-        loadActiveSessions();
-      });
-      socket.on('live_progress_update', () => {
-        loadActiveSessions();
-      });
-    } catch(e){}
   </script>
 </body>
 </html>
