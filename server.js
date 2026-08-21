@@ -166,37 +166,46 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  // ১. সঠিক স্ট্রোক বা ক্যারেক্টার গণনা (মাইক্রোসফট ওয়ার্ডের মতো ৮৪টি নিশ্চিত করতে)
+ // ১. স্পেস এবং অদৃশ্য ক্যারেক্টার বাদ দিয়ে নিখুঁত স্ট্রোক গণনা (মাইক্রোসফট ওয়ার্ডের মতো)
 const getChars = (text) => Array.from(new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' }).segment(text), x => x.segment).filter(c => c.trim() !== "");
 
 const origChars = getChars(origText);
 const typedChars = getChars(typeText);
 
-const totalTypedChars = typedChars.length; // মোট টাইপকৃত স্ট্রোক
+const totalOriginalChars = origChars.length; // এটি এখন প্রশ্নের মোট ক্যারেক্টার দেখাবে
+let totalTypedChars = typedChars.length;
 
 let correctChars = 0;
 let errors = 0;
 
-// ২. শব্দভিত্তিক এবং অতিরিক্ত টাইপ হ্যান্ডলিং লজিক
+// ২. শব্দভিত্তিক তুলনা এবং স্পেস বাদ দিয়ে ক্যারেক্টার কাউন্ট
 const origWords = origText.trim().split(/\s+/);
 const typedWords = typeText.trim().split(/\s+/);
 
-// মূল প্যাসেজের শব্দগুলো চেক করার লুপ
 for (let i = 0; i < origWords.length; i++) {
     if (typedWords[i] === origWords[i]) {
-        correctChars += origWords[i] ? origWords[i].length : 0;
+        // সঠিক হলে মূল শব্দের স্পেস ছাড়া ক্যারেক্টারগুলো যোগ হবে
+        const cleanWordChars = getChars(origWords[i]);
+        correctChars += cleanWordChars.length;
     } else {
-        // বানান ভুল হলে পুরো শব্দটির ক্যারেক্টার ভুল ধরবে
-        errors += origWords[i] ? origWords[i].length : 0;
+        // ভুল হলে মূল শব্দের স্পেস ছাড়া ক্যারেক্টারগুলো ভুল হিসেবে যোগ হবে
+        const cleanWordChars = getChars(origWords[i] || "");
+        errors += cleanWordChars.length;
     }
 }
 
-// ৩. মূল প্যাসেজের বাইরে অতিরিক্ত শব্দ বা ক্যারেক্টার টাইপ করলে তাও ভুল হিসেবে গণ্য হবে
+// ৩. মূল প্যাসেজের বাইরে অতিরিক্ত টাইপ করলে তাও ভুল ধরবে
 if (typedWords.length > origWords.length) {
     for (let j = origWords.length; j < typedWords.length; j++) {
-        errors += typedWords[j] ? typedWords[j].length : 0;
+        const extraChars = getChars(typedWords[j] || "");
+        errors += extraChars.length;
     }
 }
+
+// ৪. সেফটি চেক: সঠিক স্ট্রোক কোনোভাবেই মোট স্ট্রোককে অতিক্রম করবে না
+if (correctChars > totalTypedChars) {
+    correctChars = totalTypedChars;
+} 
   
   // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ)
   const standardWords = totalTypedChars / 5; 
