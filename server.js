@@ -166,16 +166,17 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে স্পেস ও অক্ষর সহ নিখুঁত স্ট্রোক আলাদা করা
+  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে ক্যারেক্টার ও স্পেস সহ স্ট্রোক আলাদা করা
   const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
   
   const origChars = Array.from(segmenter.segment(origText), x => x.segment);
   const typedChars = Array.from(segmenter.segment(typeText), x => x.segment);
 
-  const totalTypedChars = typedChars.length; // মোট স্ট্রোক বা ক্যারেক্টার
-  let correctChars = 0; // সঠিক স্ট্রোক
-  let errors = 0;       // ভুল স্ট্রোক
+  const totalTypedChars = typedChars.length; // মোট টাইপকৃত স্ট্রোক বা ক্যারেক্টার
+  let correctChars = 0; 
+  let errors = 0;
 
+  // মাইক্রোসফট ওয়ার্ডের পজিশন-বাই-পজিশন নিখুঁত তুলনা (Character-by-Character Comparison)
   const maxLength = Math.max(origChars.length, typedChars.length);
 
   for (let i = 0; i < maxLength; i++) {
@@ -183,10 +184,10 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     const tChar = typedChars[i];
 
     if (tChar === undefined) {
-      // কম টাইপ করা হলে তা ভুল বা মিসিং স্ট্রোক হিসেবে গণ্য হবে
+      // মূল প্যাসেজের চেয়ে কম টাইপ করলে বাকিগুলো মিসিং বা ভুল হিসেবে কাউন্ট হবে
       errors++;
     } else if (oChar === undefined) {
-      // বেশি বা অতিরিক্ত টাইপ করা হলে (যেমন আন্তর্জাতিক শব্দে অতিরিক্ত অক্ষর) তা ভুল স্ট্রোক হিসেবে গণ্য হবে
+      // মূল প্যাসেজের চেয়ে অতিরিক্ত টাইপ করলে তাও ভুল হিসেবে কাউন্ট হবে
       errors++;
     } else if (oChar === tChar) {
       correctChars++;
@@ -195,7 +196,7 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     }
   }
 
-  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ হিসেবে WPM নির্ণয়ের জন্য)
+  // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ)
   const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
   const errorPercent = totalTypedChars > 0 ? parseFloat(((errors / totalTypedChars) * 100).toFixed(1)) : 100;
@@ -207,11 +208,11 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
   const isPassed = errorPercent < 5.0 && netWpm >= minPassWpm;
 
   return {
-    totalWords: totalTypedChars,      // মোট স্ট্রোক (যেমনটি আপনি চেয়েছিলেন)
+    totalWords: totalTypedChars,      // মোট স্ট্রোক
     correctWords: correctChars,      // সঠিক স্ট্রোক
-    errors: errors,                  // ভুল স্ট্রোক (মাইক্রোসফট ওয়ার্ডের নিয়মে নিখুঁত হিসাব)
-    accuracy: accuracy,              // স্ট্রোক হিসেবে সঠিকতার শতকরা হার (%)
-    errorPercent: errorPercent,      // স্ট্রোক হিসেবে ভুলের শতকরা হার (%)
+    errors: errors,                  // ভুল স্ট্রোক
+    accuracy: accuracy,              // সঠিকতার হার (%)
+    errorPercent: errorPercent,      // ভুলের হার (%)
     grossWpm,
     netWpm,
     passed: isPassed
