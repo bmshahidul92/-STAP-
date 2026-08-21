@@ -166,12 +166,13 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  // ১. সঠিক স্ট্রোক বা ক্যারেক্টার গণনা (মাইক্রোসফট ওয়ার্ডের সাথে মিল রেখে)
+  // ১. সঠিক স্ট্রোক বা ক্যারেক্টার গণনা (মাইক্রোসফট ওয়ার্ডের মতো ৮৪টি নিশ্চিত করতে)
 const getChars = (text) => Array.from(new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' }).segment(text), x => x.segment).filter(c => c.trim() !== "");
 
 const origChars = getChars(origText);
 const typedChars = getChars(typeText);
-const totalTypedChars = typedChars.length;
+
+const totalTypedChars = typedChars.length; // মোট টাইপকৃত স্ট্রোক
 
 let correctChars = 0;
 let errors = 0;
@@ -185,7 +186,7 @@ for (let i = 0; i < origWords.length; i++) {
     if (typedWords[i] === origWords[i]) {
         correctChars += origWords[i] ? origWords[i].length : 0;
     } else {
-        // বানান ভুল হলে বা শব্দ না মিললে পুরো শব্দটির ক্যারেক্টার ভুল ধরবে
+        // বানান ভুল হলে পুরো শব্দটির ক্যারেক্টার ভুল ধরবে
         errors += origWords[i] ? origWords[i].length : 0;
     }
 }
@@ -196,7 +197,7 @@ if (typedWords.length > origWords.length) {
         errors += typedWords[j] ? typedWords[j].length : 0;
     }
 }
-
+  
   // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ)
   const standardWords = totalTypedChars / 5; 
   const accuracy = totalTypedChars > 0 ? parseFloat(((correctChars / totalTypedChars) * 100).toFixed(1)) : 0;
