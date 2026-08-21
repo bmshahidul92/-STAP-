@@ -1,288 +1,723 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>অ্যাডমিন প্যানেল - শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল</title>
-    <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
-    <style>
-        @font-face {
-            font-family: 'Nikosh';
-            src: local('Nikosh'), local('NikoshBAN'), url('https://fonts.cdnfonts.com/s/72895/Nikosh.woff') format('woff');
-            font-display: swap;
-        }
-        * { box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; font-family: 'Nikosh', 'SolaimanLipi', sans-serif; background: #f8fafc; color: #1e293b; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .hidden { display: none !important; }
-        
-        h2 { color: #1e3a8a; margin-top: 0; text-align: center; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #cbd5e1; border-radius: 6px; }
-        
-        .btn { padding: 10px 20px; font-size: 16px; font-weight: bold; color: white; background: #2563eb; border: none; border-radius: 6px; cursor: pointer; }
-        .btn:hover { background: #1d4ed8; }
-        .btn-danger { background: #dc2626; }
-        .btn-danger:hover { background: #b91c1c; }
-        .btn-success { background: #16a34a; }
-        .btn-success:hover { background: #15803d; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STAP Admin Panel & Result Sheet</title>
+  <link href="https://fonts.maateen.me/solaiman-lipi/font.css" rel="stylesheet">
+  <style>
+    @font-face {
+        font-family: 'Nikosh';
+        src: local('Nikosh'), local('NikoshBAN'), url('https://fonts.cdnfonts.com/s/72895/Nikosh.woff') format('woff');
+        font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'Nikosh', 'SolaimanLipi', 'Times New Roman', serif; background: #f4f6f9; padding: 15px; margin: 0; }
+    .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+    .brand-title { color: #1e3a8a; margin: 0; font-size: 26px; font-weight: bold; }
+    .brand-subtitle { color: #475569; margin: 2px 0 0 0; font-size: 14px; font-weight: bold; }
+    
+    .login-modal { max-width: 420px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    .config-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
+    .section-title { font-weight: bold; color: #1e40af; border-bottom: 2px solid #bfdbfe; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px; font-size: 18px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table, th, td { border: 1px solid #e2e8f0; }
-        th, td { padding: 12px; text-align: left; }
-        th { background: #f1f5f9; }
-        
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .nav-tab { padding: 8px 16px; background: #e2e8f0; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .nav-tab.active { background: #2563eb; color: white; }
-    </style>
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { font-weight: bold; font-size: 15px; display: block; margin-bottom: 5px; color: #334155; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 16px; font-family: 'Nikosh', 'Times New Roman', serif; }
+
+    .btn-save { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    .btn-reset { background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+    .btn-print { background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 5px; font-size: 16px; }
+    .btn-logout { background: #475569; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; font-size: 16px; }
+    .btn-view { background: #7c3aed; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 3px; }
+    .btn-cert { background: #d97706; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-size: 14px; }
+    th { background-color: #1e3a8a; color: white; font-size: 15px; }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    
+    .badge-pass { background: #dcfce7; color: #15803d; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .badge-fail { background: #fee2e2; color: #b91c1c; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+    .btn-delete { background: #ef4444; color: white; border: none; padding: 3px 6px; border-radius: 4px; cursor: pointer; }
+    .english-num { font-family: 'Times New Roman', Times, serif !important; }
+    .hidden { display: none !important; }
+
+    .filter-bar { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; width: 800px; max-width: 95%; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+    .passage-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; font-size: 15px; }
+
+    .print-sheet { display: none; }
+
+    @media print {
+      body * { visibility: hidden; }
+      .no-print { display: none !important; }
+      .print-sheet, .print-sheet * { visibility: visible; }
+      .print-sheet { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+      @page { size: A4; margin: 15mm; }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- ১. অ্যাডমিন লগইন কার্ড -->
-        <div id="admin-login-card" class="card" style="max-width: 450px; margin: 80px auto;">
-            <h2>অ্যাডমিন লগইন</h2>
-            <form onsubmit="event.preventDefault(); adminLogin();">
-                <div class="form-group">
-                    <label>পাসওয়ার্ড:</label>
-                    <input type="password" id="admin-pass" required placeholder="অ্যাডমিন পাসওয়ার্ড দিন">
-                </div>
-                <button type="submit" class="btn" style="width: 100%;">প্রবেশ করুন</button>
-            </form>
-        </div>
+  <!-- এডমিন লগইন -->
+  <div id="login-section" class="login-modal">
+    <h2 class="brand-title" style="text-align:center;">STAP Admin Login</h2>
+    <div class="brand-subtitle" style="text-align:center;">Shahidul Typing Assessment Portal</div>
+    <hr style="margin: 15px 0;"><br>
+    <form onsubmit="event.preventDefault(); adminLogin();">
+      <div class="form-group">
+        <label>পাসওয়ার্ড দিন:</label>
+        <input type="password" id="admin-pass-input" class="english-num" required>
+      </div>
+      <button type="submit" class="btn-save" style="width:100%;">প্রবেশ করুন</button>
+    </form>
+    <p style="text-align:center; margin-top:15px;">
+      <a href="#" onclick="showForgotPassword()" style="color:#2563eb; text-decoration:none;">পাসওয়ার্ড ভুলে গেছেন?</a>
+    </p>
+  </div>
 
-        <!-- ২. মূল অ্যাডমিন ড্যাশবোর্ড -->
-        <div id="admin-dashboard" class="card hidden">
-            <h2>অ্যাডমিন কন্ট্রোল প্যানেল</h2>
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchTab('settings')">সাধারণ সেটিংস</button>
-                <button class="nav-tab" onclick="switchTab('mobiles')">মোবাইল নম্বর ম্যানেজমেন্ট</button>
-                <button class="nav-tab" onclick="switchTab('results')">পরীক্ষার ফলাফল</button>
-            </div>
+  <!-- পাসওয়ার্ড রিকভারি -->
+  <div id="forgot-section" class="login-modal hidden">
+    <h3 style="color:#1e3a8a; text-align:center; margin-top:0;">পাসওয়ার্ড পুনরুদ্ধার</h3>
+    <p id="sec-question-disp" style="font-weight:bold; color:#333; margin-bottom:10px;"></p>
+    <form onsubmit="event.preventDefault(); recoverPassword();">
+      <div class="form-group">
+        <label>সিকিউরিটি উত্তর দিন:</label>
+        <input type="password" id="sec-answer-input" required>
+      </div>
+      <div class="form-group">
+        <label>নতুন পাসওয়ার্ড দিন:</label>
+        <input type="password" id="new-pass-input" class="english-num" required>
+      </div>
+      <button type="submit" class="btn-save" style="width:100%;">পাসওয়ার্ড রিসেট করুন</button>
+      <button type="button" onclick="showLogin()" style="width:100%; margin-top:10px; background:#64748b;" class="btn-save">ফিরে যান</button>
+    </form>
+  </div>
 
-            <!-- ট্যাব ১: সেটিংস -->
-            <div id="tab-settings" class="tab-content">
-                <h3>পরীক্ষার কনফিগারেশন আপডেট</h3>
-                <form onsubmit="event.preventDefault(); updateConfig();">
-                    <div class="form-group">
-                        <label>পরীক্ষা কোড (Exam Code):</label>
-                        <input type="text" id="cfg-exam-code">
-                    </div>
-                    <div class="form-group">
-                        <label>পরীক্ষার সময় (মিনিট):</label>
-                        <input type="number" id="cfg-duration">
-                    </div>
-                    <div class="form-group">
-                        <label>ইংরেজি প্যাসেজ:</label>
-                        <textarea id="cfg-eng-passage" rows="3"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>বাংলা প্যাসেজ:</label>
-                        <textarea id="cfg-bn-passage" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-success">সেভ পরিবর্তন</button>
-                </form>
-            </div>
-
-            <!-- ট্যাব ২: মোবাইল নম্বর ম্যানেজমেন্ট -->
-            <div id="tab-mobiles" class="tab-content hidden">
-                <h3>অনুমোদিত মোবাইল নম্বরসমূহ</h3>
-                <div class="form-group">
-                    <label>নতুন মোবাইল নম্বর যোগ করুন (কমা বা নতুন লাইনে আলাদা করুন):</label>
-                    <textarea id="new-mobiles-input" placeholder="01711223344, 01811223344" rows="2"></textarea>
-                    <button onclick="addNewMobiles()" class="btn btn-success" style="margin-top: 10px;">নম্বরগুলো যোগ করুন</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>মোবাইল নম্বর</th>
-                            <th>স্ট্যাটাস</th>
-                            <th>অ্যাকশন</th>
-                        </tr>
-                    <thead id="mobile-table-body">
-                        <!-- জাভাস্ক্রিপ্ট দিয়ে ডাটা লোড হবে -->
-                    </thead>
-                </table>
-            </div>
-
-            <!-- ট্যাব ৩: ফলাফল -->
-            <div id="tab-results" class="tab-content hidden">
-                <h3>সকল পরীক্ষার্থীর ফলাফল</h3>
-                <button onclick="loadResults()" class="btn" style="margin-bottom: 10px;">রিফ্রেশ রেজাল্ট</button>
-                <button onclick="clearAllResults()" class="btn btn-danger" style="margin-bottom: 10px;">সব ফলাফল মুছুন</button>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>মোবাইল নম্বর</th>
-                            <th>ইংরেজি WPM</th>
-                            <th>বাংলা WPM</th>
-                            <th>ফলাফল</th>
-                            <th>অ্যাকশন</th>
-                        </tr>
-                    </thead>
-                    <tbody id="results-table-body">
-                        <!-- রেজাল্ট লোড হবে -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- ড্যাশবোর্ড -->
+  <div id="admin-dashboard" class="container hidden">
+    <div class="header-area">
+      <div>
+        <h2 class="brand-title">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+        <div class="brand-subtitle">Shahidul Typing Assessment Portal</div>
+      </div>
+      <div class="no-print">
+        <button onclick="window.print()" class="btn-print">🖨️ প্রিন্ট / PDF</button>
+        <button onclick="resetAllData()" class="btn-reset">🗑️ ডাটা রিসেট</button>
+        <button onclick="adminLogout()" class="btn-logout">🚪 লগআউট</button>
+      </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        let currentAdminPass = "";
+    <!-- লাইভ লিডারবোর্ড সেকশন -->
+    <div class="config-box no-print" style="background:#f0fdf4; border-color:#bbf7d0;">
+      <h3 style="margin-top:0; color:#166534;">🟢 লাইভ টাইপিং প্রগ্রেস (Live Leaderboard)</h3>
+      <div style="overflow-x:auto;">
+        <table style="background:#fff;">
+          <thead>
+            <tr>
+              <th>মোবাইল নম্বর</th>
+              <th>নাম</th>
+              <th>বর্তমান ধাপ</th>
+              <th>গতি (WPM)</th>
+              <th>সঠিকতা (%)</th>
+              <th>অবস্থা / শেষ আপডেট</th>
+            </tr>
+          </thead>
+          <tbody id="live-sessions-body">
+            <tr><td colspan="6">কোনো পরীক্ষার্থী বর্তমানে লাইভে নেই।</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-        async function adminLogin() {
-            const password = document.getElementById('admin-pass').value;
-            const res = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password })
-            });
-            const data = await res.json();
-            if (data.success) {
-                currentAdminPass = password;
-                document.getElementById('admin-login-card').classList.add('hidden');
-                document.getElementById('admin-dashboard').classList.remove('hidden');
-                loadFullConfig();
-                loadResults();
-            } else {
-                alert(data.message);
-            }
+    <!-- কাস্টমাইজেশন প্যানেল -->
+    <div class="config-box no-print">
+      <h3 style="margin-top:0; color:#1e40af;">⚙️ পরীক্ষা সেটআপ ও মোবাইল নম্বর ম্যানেজমেন্ট প্যানেল</h3>
+      
+      <div class="config-grid">
+        <div class="form-group">
+            <label>পরীক্ষা কোড (Exam Code):</label>
+            <input type="text" id="cfg-exam-code" class="english-num">
+        </div>
+        <div class="form-group">
+            <label>টাইপিং সময় (মিনিট):</label>
+            <input type="number" id="cfg-duration" class="english-num">
+        </div>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+            <label>ইংরেজি পাসের জন্য সর্বনিম্ন নিট গতি (WPM):</label>
+            <input type="number" id="cfg-eng-min-wpm" class="english-num">
+        </div>
+        <div class="form-group">
+            <label>বাংলা পাসের জন্য সর্বনিম্ন নিট গতি (WPM):</label>
+            <input type="number" id="cfg-bn-min-wpm" class="english-num">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>নতুন মোবাইল নম্বরসমূহ যুক্ত করুন (কমা বা নতুন লাইনে আলাদা করুন):</label>
+        <textarea id="cfg-new-rolls" rows="2" class="english-num" placeholder="যেমন: 01711223344, 01811223344"></textarea>
+      </div>
+
+      <div class="section-title">📋 নিবন্ধিত মোবাইল নম্বরসমূহ ও পরীক্ষা কোড ম্যানেজমেন্ট</div>
+      <div style="max-height:250px; overflow-y:auto; border:1px solid #cbd5e1; background:#fff; margin-bottom:15px;">
+        <table>
+          <thead>
+            <tr>
+              <th>মোবাইল নম্বর</th>
+              <th>অনুমোদিত পরীক্ষা কোড</th>
+              <th>মেয়াদ উত্তীর্ণের তারিখ ও সময়</th>
+              <th>ব্লক স্ট্যাটাস</th>
+              <th>অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="roll-settings-body">
+            <tr><td colspan="5">কোনো মোবাইল নম্বর নিবন্ধিত নেই।</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+            <label>ইংরেজি পাসেজ (প্রশ্ন):</label>
+            <textarea id="cfg-eng-passage" rows="3" class="english-num"></textarea>
+        </div>
+        <div class="form-group">
+            <label>বাংলা পাসেজ (প্রশ্ন):</label>
+            <textarea id="cfg-bn-passage" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="section-title">🔄 পুনরায় টাইপিং অনুমতি (সেশন রিসেট)</div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="reset-roll-input" class="english-num" placeholder="মোবাইল নম্বর দিন" style="width:200px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <input type="text" id="reset-code-input" class="english-num" placeholder="পরীক্ষা কোড (ঐচ্ছিক)" style="width:180px; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <button onclick="allowReType()" class="btn-save" style="background:#ea580c;">পুনরায় টাইপ করার অনুমতি দিন</button>
+      </div>
+
+      <div class="section-title">🔑 পাসওয়ার্ড ও সিকিউরিটি পরিবর্তন</div>
+      <div class="config-grid">
+        <div class="form-group">
+          <label>বর্তমান পাসওয়ার্ড:</label>
+          <input type="password" id="cfg-curr-pass" class="english-num">
+        </div>
+        <div class="form-group">
+          <label>নতুন পাসওয়ার্ড:</label>
+          <input type="password" id="cfg-new-pass" class="english-num">
+        </div>
+      </div>
+
+      <div class="config-grid">
+        <div class="form-group">
+          <label>সিকিউরিটি প্রশ্ন:</label>
+          <input type="text" id="cfg-sec-q">
+        </div>
+        <div class="form-group">
+          <label>বর্তমান সিকিউরিটি উত্তর:</label>
+          <input type="password" id="cfg-curr-sec-a">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>নতুন সিকিউরিটি উত্তর:</label>
+        <input type="password" id="cfg-new-sec-a">
+      </div>
+
+      <button onclick="saveConfig()" class="btn-save" style="margin-top:15px;">সেটিংস ও মোবাইল নম্বর আপডেট করুন</button>
+    </div>
+
+    <div class="filter-bar no-print">
+      <h3 style="margin:0; width:100%; color:#1e3a8a;">🔍 ফলাফল ফিল্টার ও প্রিন্ট</h3>
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label>পরীক্ষা কোড দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
+        <input type="text" id="filter-exam-codes" class="english-num" placeholder="যেমন: BCC2026, EXAM2">
+      </div>
+      <div class="form-group" style="flex:1; margin-bottom:0;">
+        <label>মোবাইল নম্বর দিয়ে ফিল্টার (কমা দিয়ে একাধিক):</label>
+        <input type="text" id="filter-rolls" class="english-num" placeholder="যেমন: 01711, 01811">
+      </div>
+      <div>
+        <button onclick="loadResults()" class="btn-save" style="padding:8px 15px; margin-right:5px;">ফিল্টার প্রয়োগ করুন</button>
+        <button onclick="clearFilter()" class="btn-logout" style="background:#64748b; margin-left:0;">রিসেট</button>
+      </div>
+    </div>
+
+    <h3>📊 সকল পরীক্ষার্থীর রেজাল্ট তালিকা</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">মোবাইল</th>
+            <th rowspan="2">পরীক্ষার্থীর নাম</th>
+            <th rowspan="2">পরীক্ষা কোড</th>
+            <th rowspan="2">জমা দেওয়ার সময়</th>
+            <th colspan="8">ইংরেজি টাইপিং</th>
+            <th colspan="8">বাংলা টাইপিং</th>
+            <th rowspan="2">চূড়ান্ত ফল</th>
+            <th rowspan="2" class="no-print">কপি দেখুন</th>
+            <th rowspan="2" class="no-print">মার্কশিট ও সার্টিফিকেট প্রিন্ট</th>
+            <th rowspan="2" class="no-print">অ্যাকশন</th>
+          </tr>
+          <tr>
+            <th>মোট শব্দ</th>
+            <th>সঠিক</th>
+            <th>সঠিকতা</th>
+            <th>ভুল</th>
+            <th>ভুল (%)</th>
+            <th>নিট WPM</th>
+            <th>মোট WPM</th>
+            <th>ফলাফল</th>
+            <th>মোট শব্দ</th>
+            <th>সঠিক</th>
+            <th>সঠিকতা</th>
+            <th>ভুল</th>
+            <th>ভুল (%)</th>
+            <th>নিট WPM</th>
+            <th>মোট WPM</th>
+            <th>ফলাফল</th>
+          </tr>
+        </thead>
+        <tbody id="results-body">
+          <tr><td colspan="23">ডাটা লোড হচ্ছে...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="typed-copy-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 style="color:#1e3a8a; margin-top:0;" id="modal-candidate-title">পরীক্ষার্থীর টাইপকৃত কপি</h3>
+      
+      <p style="font-weight:bold; margin-bottom:5px;">ইংরেজি টাইপ করা টেক্সট:</p>
+      <div class="passage-box english-num" id="modal-eng-text"></div>
+      
+      <p style="font-weight:bold; margin-bottom:5px;">বাংলা টাইপ করা টেক্সট:</p>
+      <div class="passage-box" id="modal-bn-text"></div>
+      
+      <div style="text-align:right; margin-top:15px;" class="no-print">
+        <button onclick="printTypedCopy()" class="btn-print">🖨️ প্রিন্ট / PDF</button>
+        <button onclick="closeModal()" class="btn-logout">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="print-sheet-container" class="print-sheet"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let globalResults = [];
+
+    async function adminLogin() {
+      const password = document.getElementById('admin-pass-input').value;
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        loadConfig();
+        loadResults();
+        loadActiveSessions();
+      } else alert(data.message);
+    }
+
+    function adminLogout() {
+      document.getElementById('admin-dashboard').classList.add('hidden');
+      document.getElementById('login-section').classList.remove('hidden');
+    }
+
+    async function showForgotPassword() {
+      const res = await fetch('/api/admin/security-question');
+      const data = await res.json();
+      document.getElementById('sec-question-disp').innerText = "প্রশ্ন: " + data.question;
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('forgot-section').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('forgot-section').classList.add('hidden');
+      document.getElementById('login-section').classList.remove('hidden');
+    }
+
+    async function recoverPassword() {
+      const answer = document.getElementById('sec-answer-input').value;
+      const newPassword = document.getElementById('new-pass-input').value;
+      const res = await fetch('/api/admin/recover-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer, newPassword })
+      });
+      const data = await res.json();
+      alert(data.message);
+      if(data.success) showLogin();
+    }
+
+    async function loadConfig() {
+      const res = await fetch('/api/admin/full-config');
+      const data = await res.json();
+      document.getElementById('cfg-exam-code').value = data.examCode || '';
+      document.getElementById('cfg-duration').value = data.duration || 5;
+      document.getElementById('cfg-eng-min-wpm').value = data.engMinPassWpm || 20;
+      document.getElementById('cfg-bn-min-wpm').value = data.bnMinPassWpm || 15;
+      document.getElementById('cfg-eng-passage').value = data.engPassage || '';
+      document.getElementById('cfg-bn-passage').value = data.bnPassage || '';
+      document.getElementById('cfg-sec-q').value = data.securityQuestion || '';
+
+      const tbody = document.getElementById('roll-settings-body');
+      tbody.innerHTML = '';
+      const rollSettings = data.rollSettings || {};
+      const rolls = Object.keys(rollSettings);
+
+      if (rolls.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">কোনো মোবাইল নম্বর নিবন্ধিত নেই। নতুন নম্বর যোগ করুন।</td></tr>';
+        return;
+      }
+
+      rolls.forEach(roll => {
+        const info = rollSettings[roll];
+        const allowedCodesStr = Array.isArray(info.allowedExamCodes) ? info.allowedExamCodes.join(', ') : (info.allowedExamCodes || data.examCode);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="english-num"><strong>${roll}</strong></td>
+          <td><input type="text" class="english-num roll-allowed-codes" data-roll="${roll}" value="${allowedCodesStr}" style="padding:4px;" placeholder="যেমন: BCC2026, EXAM2"></td>
+          <td><input type="datetime-local" class="english-num roll-expiry" data-roll="${roll}" value="${info.expiryTime || ''}" style="padding:4px;"></td>
+          <td>
+            <label style="cursor:pointer;">
+              <input type="checkbox" class="roll-block" data-roll="${roll}" ${info.isBlocked ? 'checked' : ''}> ব্লক করা
+            </label>
+          </td>
+          <td>
+            <button onclick="deleteRoll('${roll}')" class="btn-delete">মুছুন</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveConfig() {
+      const rollUpdates = [];
+      document.querySelectorAll('.roll-expiry').forEach(input => {
+        const roll = input.getAttribute('data-roll');
+        const expiryTime = input.value;
+        const blockCheckbox = document.querySelector(`.roll-block[data-roll="${roll}"]`);
+        const allowedCodesInput = document.querySelector(`.roll-allowed-codes[data-roll="${roll}"]`);
+        
+        const isBlocked = blockCheckbox ? blockCheckbox.checked : false;
+        const allowedExamCodes = allowedCodesInput ? allowedCodesInput.value : '';
+
+        rollUpdates.push({ roll, expiryTime, isBlocked, allowedExamCodes });
+      });
+
+      const res = await fetch('/api/admin/update-config', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          examCode: document.getElementById('cfg-exam-code').value,
+          duration: document.getElementById('cfg-duration').value,
+          engMinPassWpm: document.getElementById('cfg-eng-min-wpm').value,
+          bnMinPassWpm: document.getElementById('cfg-bn-min-wpm').value,
+          engPassage: document.getElementById('cfg-eng-passage').value,
+          bnPassage: document.getElementById('cfg-bn-passage').value,
+          newRolls: document.getElementById('cfg-new-rolls').value,
+          rollUpdates: rollUpdates,
+          currPass: document.getElementById('cfg-curr-pass').value,
+          newPass: document.getElementById('cfg-new-pass').value,
+          secQ: document.getElementById('cfg-sec-q').value,
+          currSecAns: document.getElementById('cfg-curr-sec-a').value,
+          newSecAns: document.getElementById('cfg-new-sec-a').value
+        })
+      });
+      const data = await res.json();
+      alert(data.message);
+      if(data.success) {
+        document.getElementById('cfg-new-rolls').value = '';
+        loadConfig();
+      }
+    }
+
+    async function deleteRoll(roll) {
+      if (confirm(`মোবাইল নম্বর ${roll} মুছে ফেলতে চান?`)) {
+        const res = await fetch('/api/admin/delete-roll', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roll })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadConfig();
+      }
+    }
+
+    async function allowReType() {
+      const roll = document.getElementById('reset-roll-input').value.trim();
+      const examCode = document.getElementById('reset-code-input').value.trim();
+      if(!roll) return alert("মোবাইল নম্বর দিন!");
+      
+      const res = await fetch('/api/admin/reset-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateId: roll, examCode })
+      });
+      const data = await res.json();
+      alert(data.message);
+      document.getElementById('reset-roll-input').value = '';
+      document.getElementById('reset-code-input').value = '';
+    }
+
+    // নির্দিষ্ট পরীক্ষার্থীর রেজাল্ট মুছে ফেলার ফাংশন (মুছুন বাটন)
+    async function deleteResult(index) {
+      const row = globalResults[index];
+      if (!row) return;
+
+      if (confirm(`আপনি কি নিশ্চিতভাবে পরীক্ষার্থী ${row.candidateName} (${row.candidateId})-এর ফলাফল মুছে ফেলতে চান?`)) {
+        const res = await fetch('/api/admin/delete-result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ candidateId: row.candidateId, examCode: row.examCode })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+          loadResults();
         }
+      }
+    }
 
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-            
-            if(tabName === 'settings') {
-                document.getElementById('tab-settings').classList.remove('hidden');
-                event.target.classList.add('active');
-            } else if(tabName === 'mobiles') {
-                document.getElementById('tab-mobiles').classList.remove('hidden');
-                event.target.classList.add('active');
-                loadFullConfig();
-            } else if(tabName === 'results') {
-                document.getElementById('tab-results').classList.remove('hidden');
-                event.target.classList.add('active');
-                loadResults();
-            }
+    // সমস্ত ফলাফল রিসেট বা মুছে ফেলার ফাংশন (ডাটা রিসেট বাটন)
+    async function resetAllData() {
+      if (confirm("⚠️ সতর্কবার্তা: আপনি কি সমস্ত পরীক্ষার্থীর ফলাফল এবং ডাটা চিরতরে মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না!")) {
+        const password = prompt("নিশ্চিতকরণের জন্য এডমিন পাসওয়ার্ড দিন:");
+        if (!password) return;
+
+        const res = await fetch('/api/admin/reset-all-results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+          loadResults();
         }
+      }
+    }
 
-        async function loadFullConfig() {
-            const res = await fetch('/api/admin/full-config');
-            const data = await res.json();
-            
-            document.getElementById('cfg-exam-code').value = data.examCode || "";
-            document.getElementById('cfg-duration').value = data.duration || 5;
-            document.getElementById('cfg-eng-passage').value = data.engPassage || "";
-            document.getElementById('cfg-bn-passage').value = data.bnPassage || "";
+    async function loadResults() {
+      const examCodes = document.getElementById('filter-exam-codes').value.trim();
+      const rolls = document.getElementById('filter-rolls').value.trim();
 
-            const tableBody = document.getElementById('mobile-table-body');
-            tableBody.innerHTML = "";
-            const rolls = data.rollSettings || {};
+      let queryParams = new URLSearchParams();
+      if (examCodes) queryParams.append('examCodes', examCodes);
+      if (rolls) queryParams.append('rolls', rolls);
 
-            for (const [roll, info] of Object.entries(rolls)) {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>${roll}</td>
-                        <td>${info.isBlocked ? 'ব্লকড' : 'সক্রিয়'}</td>
-                        <td>
-                            <button class="btn" style="padding: 5px 10px; font-size: 14px;" onclick="resetSession('${roll}')">রিসেট</button>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;" onclick="deleteMobile('${roll}')">মুছুন</button>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
+      const url = `/api/results${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
+      const res = await fetch(url);
+      globalResults = await res.json();
+      const tbody = document.getElementById('results-body');
+      tbody.innerHTML = '';
 
-        async function updateConfig() {
-            const body = {
-                examCode: document.getElementById('cfg-exam-code').value,
-                duration: document.getElementById('cfg-duration').value,
-                engPassage: document.getElementById('cfg-eng-passage').value,
-                bnPassage: document.getElementById('cfg-bn-passage').value
-            };
-            const res = await fetch('/api/admin/update-config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json();
-            alert(data.message);
-        }
+      if (!globalResults || globalResults.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="23">কোনো ফলাফল পাওয়া যায়নি।</td></tr>';
+        return;
+      }
 
-        async function addNewMobiles() {
-            const newRolls = document.getElementById('new-mobiles-input').value;
-            if(!newRolls) return;
-            const res = await fetch('/api/admin/update-config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ newRolls })
-            });
-            const data = await res.json();
-            alert(data.message);
-            document.getElementById('new-mobiles-input').value = "";
-            loadFullConfig();
-        }
+      globalResults.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        const overallStatus = row.overallPassed 
+          ? `<span class="badge-pass">কৃতকার্য</span>` 
+          : `<span class="badge-fail">অকৃতকার্য</span>`;
 
-        async function deleteMobile(roll) {
-            if(!confirm(`আপনি কি ${roll} নম্বরটি মুছে ফেলতে চান?`)) return;
-            const res = await fetch('/api/admin/delete-roll', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roll })
-            });
-            const data = await res.json();
-            alert(data.message);
-            loadFullConfig();
-        }
+        tr.innerHTML = `
+          <td class="english-num"><strong>${row.candidateId}</strong></td>
+          <td>${row.candidateName}</td>
+          <td class="english-num"><strong>${row.examCode || '-'}</strong></td>
+          <td class="english-num">${row.submittedAt || '-'}</td>
+          
+          <td class="english-num">${row.english.totalWords}</td>
+          <td class="english-num">${row.english.correctWords}</td>
+          <td class="english-num">${row.english.accuracy}%</td>
+          <td class="english-num">${row.english.errors}</td>
+          <td class="english-num">${row.english.errorPercent}%</td>
+          <td class="english-num"><strong>${row.english.netWpm}</strong></td>
+          <td class="english-num">${row.english.grossWpm}</td>
+          <td>${row.english.passed ? '<span class="badge-pass">পাস</span>' : '<span class="badge-fail">ফেল</span>'}</td>
 
-        async function resetSession(candidateId) {
-            const res = await fetch('/api/admin/reset-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ candidateId })
-            });
-            const data = await res.json();
-            alert(data.message);
-        }
+          <td class="english-num">${row.bangla.totalWords}</td>
+          <td class="english-num">${row.bangla.correctWords}</td>
+          <td class="english-num">${row.bangla.accuracy}%</td>
+          <td class="english-num">${row.bangla.errors}</td>
+          <td class="english-num">${row.bangla.errorPercent}%</td>
+          <td class="english-num"><strong>${row.bangla.netWpm}</strong></td>
+          <td class="english-num">${row.bangla.grossWpm}</td>
+          <td>${row.bangla.passed ? '<span class="badge-pass">পাস</span>' : '<span class="badge-fail">ফেল</span>'}</td>
 
-        async function loadResults() {
-            const res = await fetch('/api/results');
-            const results = await res.json();
-            const tbody = document.getElementById('results-table-body');
-            tbody.innerHTML = "";
+          <td>${overallStatus}</td>
+          <td class="no-print">
+            <button onclick="viewTypedCopy(${idx})" class="btn-view">কপি দেখুন</button>
+          </td>
+          <td class="no-print">
+            <button onclick="printMarkSheet(${idx})" class="btn-view" style="background:#0284c7;">মার্কশিট</button>
+            <button onclick="printCertificate(${idx})" class="btn-cert">সার্টিফিকেট</button>
+          </td>
+          <td class="no-print">
+            <button onclick="deleteResult(${idx})" class="btn-delete">মুছুন</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-            results.forEach((r, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${r.candidateId}</td>
-                        <td>${r.english ? r.english.netWpm : 0} WPM</td>
-                        <td>${r.bangla ? r.bangla.netWpm : 0} WPM</td>
-                        <td>${r.overallPassed ? 'পাস' : 'ফেল'}</td>
-                        <td>
-                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 14px;" onclick="deleteResult(${index})">মুছুন</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    function clearFilter() {
+      document.getElementById('filter-exam-codes').value = '';
+      document.getElementById('filter-rolls').value = '';
+      loadResults();
+    }
 
-        async function deleteResult(index) {
-            if(!confirm("এই ফলাফলটি মুছে ফেলতে চান?")) return;
-            await fetch(`/api/results/${index}`, { method: 'DELETE' });
-            loadResults();
-        }
+    async function loadActiveSessions() {
+      const res = await fetch('/api/admin/active-sessions');
+      const sessions = await res.json();
+      const tbody = document.getElementById('live-sessions-body');
+      tbody.innerHTML = '';
 
-        async function clearAllResults() {
-            if(!confirm("সকল ফলাফল মুছে ফেলতে চান?")) return;
-            await fetch('/api/results', { method: 'DELETE' });
-            loadResults();
-        }
-    </script>
+      const keys = Object.keys(sessions);
+      if (keys.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">কোনো পরীক্ষার্থী বর্তমানে লাইভে নেই।</td></tr>';
+        return;
+      }
+
+      keys.forEach(key => {
+        const s = sessions[key];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="english-num"><strong>${s.candidateId}</strong></td>
+          <td>${s.candidateName}</td>
+          <td>${s.step === 'eng' ? 'ইংরেজি টাইপিং' : (s.step === 'bn' ? 'বাংলা টাইপিং' : 'সম্পন্ন')}</td>
+          <td class="english-num"><strong>${s.currentWpm || 0} WPM</strong></td>
+          <td class="english-num">${s.currentAccuracy || 100}%</td>
+          <td class="english-num">${s.lastUpdated || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewTypedCopy(index) {
+      const row = globalResults[index];
+      if (!row) return;
+      document.getElementById('modal-candidate-title').innerText = `মোবাইল: ${row.candidateId} (${row.candidateName}) - পরীক্ষার কোড: ${row.examCode || '-'} - টাইপকৃত কপি`;
+      document.getElementById('modal-eng-text').innerText = row.engText || 'কোনো টেক্সট পাওয়া যায়নি।';
+      document.getElementById('modal-bn-text').innerText = row.bnText || 'কোনো টেক্সট পাওয়া যায়নি।';
+      document.getElementById('typed-copy-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('typed-copy-modal').classList.add('hidden');
+    }
+
+    function printTypedCopy() {
+      window.print();
+    }
+
+    function printMarkSheet(index) {
+      const row = globalResults[index];
+      if (!row) return;
+
+      const container = document.getElementById('print-sheet-container');
+      container.innerHTML = `
+        <div style="text-align:center; border-bottom:2px solid #1e3a8a; padding-bottom:10px; margin-bottom:20px;">
+          <h2 style="margin:0; color:#1e3a8a;">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h2>
+          <p style="margin:2px 0; font-weight:bold; font-size:16px;">অফিশিয়াল টাইপিং মূল্যায়ন মার্কশিট</p>
+          <p style="margin:0; font-size:14px;">পরীক্ষা কোড (Exam Code): <strong>${row.examCode || 'N/A'}</strong></p>
+        </div>
+        <table style="width:100%; margin-bottom:20px; font-size:15px;">
+          <tr>
+            <td style="text-align:left; border:none; padding:5px;"><strong>পরীক্ষার্থীর নাম:</strong> ${row.candidateName}</td>
+            <td style="text-align:right; border:none; padding:5px;"><strong>মোবাইল নম্বর:</strong> ${row.candidateId}</td>
+          </tr>
+          <tr>
+            <td style="text-align:left; border:none; padding:5px;"><strong>জমাদানের সময়:</strong> ${row.submittedAt || '-'}</td>
+            <td style="text-align:right; border:none; padding:5px;"><strong>চূড়ান্ত ফলাফল:</strong> ${row.overallPassed ? 'কৃতকার্য (PASSED)' : 'অকৃতকার্য (FAILED)'}</td>
+          </tr>
+        </table>
+        
+        <h3>১. ইংরেজি টাইপিং পারফরম্যান্স</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+          <tr><th>মোট শব্দ</th><th>সঠিক শব্দ</th><th>সঠিকতা (%)</th><th>ভুল শব্দ</th><th>ভুল (%)</th><th>নিট গতি (WPM)</th><th>স্ট্যাটাস</th></tr>
+          <tr>
+            <td class="english-num">${row.english.totalWords}</td>
+            <td class="english-num">${row.english.correctWords}</td>
+            <td class="english-num">${row.english.accuracy}%</td>
+            <td class="english-num">${row.english.errors}</td>
+            <td class="english-num">${row.english.errorPercent}%</td>
+            <td class="english-num"><strong>${row.english.netWpm}</strong></td>
+            <td>${row.english.passed ? 'পাস' : 'ফেল'}</td>
+          </tr>
+        </table>
+
+        <h3>২. বাংলা টাইপিং পারফরম্যান্স</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:40px;">
+          <tr><th>মোট শব্দ</th><th>সঠিক শব্দ</th><th>সঠিকতা (%)</th><th>ভুল শব্দ</th><th>ভুল (%)</th><th>নিট গতি (WPM)</th><th>স্ট্যাটাস</th></tr>
+          <tr>
+            <td class="english-num">${row.bangla.totalWords}</td>
+            <td class="english-num">${row.bangla.correctWords}</td>
+            <td class="english-num">${row.bangla.accuracy}%</td>
+            <td class="english-num">${row.bangla.errors}</td>
+            <td class="english-num">${row.bangla.errorPercent}%</td>
+            <td class="english-num"><strong>${row.bangla.netWpm}</strong></td>
+            <td>${row.bangla.passed ? 'পাস' : 'ফেল'}</td>
+          </tr>
+        </table>
+
+        <div style="display:flex; justify-content:space-between; margin-top:60px; text-align:center;">
+          <div>
+            <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;">পরীক্ষার্থীর স্বাক্ষর</p>
+          </div>
+          <div>
+            <p style="border-top:1px solid #333; width:200px; margin:0 auto; padding-top:5px;">পরীক্ষা নিয়ন্ত্রক / এডমিন</p>
+          </div>
+        </div>
+      `;
+
+      window.print();
+    }
+
+    function printCertificate(index) {
+      const row = globalResults[index];
+      if (!row) return;
+
+      const container = document.getElementById('print-sheet-container');
+      container.innerHTML = `
+        <div style="border:10px solid #1e3a8a; padding:40px; text-align:center; height:90vh; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <h1 style="color:#1e3a8a; margin:0; font-size:32px;">শহীদুল টাইপিং অ্যাসেসমেন্ট পোর্টাল (STAP)</h1>
+            <p style="margin:5px 0; font-size:18px; color:#475569;">Certificate of Achievement in Typing Proficiency</p>
+          </div>
+          <div style="margin: 20px 0;">
+            <p style="font-size:16px; margin-bottom:10px;">এই মর্মে প্রত্যয়ন করা যাচ্ছে যে,</p>
+            <h2 style="font-size:28px; color:#111827; margin:10px 0; border-bottom:2px dashed #cbd5e1; display:inline-block; padding-bottom:5px;">${row.candidateName}</h2>
+            <p style="font-size:16px; margin-top:15px;">মোবাইল নম্বর: <strong class="english-num">${row.candidateId}</strong>, পরীক্ষা কোড: <strong class="english-num">${row.examCode || 'N/A'}</strong>-এর অধীনে টাইপিং পরীক্ষায় সফলভাবে অংশগ্রহণ করেছেন।</p>
+            <p style="font-size:16px; margin-top:10px;">পরীক্ষায় তার অর্জিত ইংরেজি নিট গতি <strong class="english-num">${row.english.netWpm} WPM</strong> এবং বাংলা নিট গতি <strong class="english-num">${row.bangla.netWpm} WPM</strong>।</p>
+            <p style="font-size:18px; font-weight:bold; color:${row.overallPassed ? '#15803d' : '#b91c1c'}; margin-top:15px;">চূড়ান্ত ফলাফল: ${row.overallPassed ? 'কৃতকার্য (PASSED)' : 'অকৃতকার্য (FAILED)'}</p>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:40px; text-align:center;">
+            <div>
+              <p style="margin:0; font-size:14px;" class="english-num">তারিখ: ${row.submittedAt || '-'}</p>
+            </div>
+            <div>
+              <p style="border-top:1px solid #333; width:220px; margin:0 auto; padding-top:5px; font-weight:bold;">পরীক্ষা নিয়ন্ত্রক / এডমিন</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      window.print();
+    }
+  </script>
 </body>
 </html>
