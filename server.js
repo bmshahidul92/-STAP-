@@ -166,32 +166,36 @@ function calculateMetrics(original, typed, durationMin, minPassWpm, isBangla = f
     };
   }
 
-  // মাইক্রোসফট ওয়ার্ডের মতো গ্রাফিম ক্লাস্টার ব্যবহার করে ক্যারেক্টার ও স্পেস বাদে স্ট্রোক আলাদা করা
-  const segmenter = new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' });
-  
-  const origChars = isBangla ? origText.replace(/\s+/g, "").split("") : Array.from(segmenter.segment(origText), x => x.segment).filter(c => c.trim() !== "");
-  const typedChars = isBangla ? typeText.replace(/\s+/g, "").split("") : Array.from(segmenter.segment(typeText), x => x.segment).filter(c => c.trim() !== "");
-  
-  const totalTypedChars = typedChars.length; // মোট টাইপকৃত স্ট্রোক বা ক্যারেক্টার
-  let correctChars = 0; 
-  let errors = 0;
+  // ১. সঠিক স্ট্রোক বা ক্যারেক্টার গণনা (মাইক্রোসফট ওয়ার্ডের সাথে মিল রেখে)
+const getChars = (text) => Array.from(new Intl.Segmenter(isBangla ? 'bn' : 'en', { granularity: 'grapheme' }).segment(text), x => x.segment).filter(c => c.trim() !== "");
 
-  // মাইক্রোসফট ওয়ার্ডের পজিশন-বাই-পজিশন নিখুঁত তুলনা (Character-by-Character Comparison)
-  const maxLength = Math.max(origChars.length, typedChars.length);
+const origChars = getChars(origText);
+const typedChars = getChars(typeText);
+const totalTypedChars = typedChars.length;
 
-  // শুধুমাত্র টাইপকৃত টেক্সটের দৈর্ঘ্যের ওপর ভিত্তি করে লুপ চলবে
-  const typeLength = typedChars.length;
-  for (let i = 0; i < typeLength; i++) {
-    const oChar = origChars[i];
-    const tChar = typedChars[i];
+let correctChars = 0;
+let errors = 0;
 
-    // মূল প্যাসেজে অক্ষর না থাকলে বা টাইপ করা অক্ষর ভুল হলে ভুল হিসেবে গণ্য হবে
-    if (oChar === undefined || oChar !== tChar) {
-      errors++;
+// ২. শব্দভিত্তিক এবং অতিরিক্ত টাইপ হ্যান্ডলিং লজিক
+const origWords = origText.trim().split(/\s+/);
+const typedWords = typeText.trim().split(/\s+/);
+
+// মূল প্যাসেজের শব্দগুলো চেক করার লুপ
+for (let i = 0; i < origWords.length; i++) {
+    if (typedWords[i] === origWords[i]) {
+        correctChars += origWords[i] ? origWords[i].length : 0;
     } else {
-      correctChars++;
+        // বানান ভুল হলে বা শব্দ না মিললে পুরো শব্দটির ক্যারেক্টার ভুল ধরবে
+        errors += origWords[i] ? origWords[i].length : 0;
     }
-  }
+}
+
+// ৩. মূল প্যাসেজের বাইরে অতিরিক্ত শব্দ বা ক্যারেক্টার টাইপ করলে তাও ভুল হিসেবে গণ্য হবে
+if (typedWords.length > origWords.length) {
+    for (let j = origWords.length; j < typedWords.length; j++) {
+        errors += typedWords[j] ? typedWords[j].length : 0;
+    }
+}
 
   // স্ট্যান্ডার্ড ওয়ার্ড ক্যালকুলেশন (৫ ক্যারেক্টারে ১ শব্দ)
   const standardWords = totalTypedChars / 5; 
