@@ -17,10 +17,10 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 
 let db = {
   config: {
-    examCode: "BCC2026",
+    examCode: "ECS2026",
     engPassage: "The quick brown fox jumps over the lazy dog. Fast typing requires practice and precision.",
     bnPassage: "আমাদের বাংলাদেশের প্রাকৃতিক সৌন্দর্য অপরূপ। বাংলা ভাষায় সঠিক ও দ্রুত টাইপিং জানা অত্যন্ত প্রয়োজনীয়।",
-    duration: 5,
+    duration: 1,
     engMinPassWpm: 20,
     bnMinPassWpm: 15,
     adminPassword: "632750",
